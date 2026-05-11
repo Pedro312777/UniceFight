@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://cgfx2e30q58cc"]
+
+[ext_resource type="Texture2D" uid="uid://0ukpewcgbhrb" path="res://assets/player/idle.jpg" id="1_oul6g"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kqu6x"]
+size = Vector2(158.625, 140)
+
+[node name="Player" type="CharacterBody2D" unique_id=1936421181]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=570728905]
+position = Vector2(328.99997, 794)
+scale = Vector2(0.5, 0.556)
+texture = ExtResource("1_oul6g")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=857122855]
+position = Vector2(329, 794)
+shape = SubResource("RectangleShape2D_kqu6x")
