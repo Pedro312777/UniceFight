@@ -1,0 +1,30 @@
+/* ===================================================
+   UNICEFIGHT - Estilos Globais
+   Arquivo: style.css
+   =================================================== */
+
+/* Remove margens e scrollbars padrão do navegador */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Courier New', monospace; /* Fonte estilo terminal/pixel */
+}
+
+/* O canvas ocupa a tela toda mantendo proporção */
+#gameCanvas {
+  display: block;
+  /* A proporção é controlada pelo JavaScript */
+  image-rendering: pixelated;        /* Mantém visual pixel art sem blur */
+  image-rendering: crisp-edges;
+}

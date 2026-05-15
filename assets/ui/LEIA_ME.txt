@@ -1,0 +1,12 @@
+=== PASTA: ui ===
+
+Coloque aqui elementos da interface:
+
+  dialog_box.png     → Fundo da caixa de diálogo
+  hud_hp_bar.png     → Barra de vida
+  cafe.png           → Ícone do café (item de cura)
+  energetico.png     → Ícone do energético (boost)
+  logo.png           → Logo UNICEFIGHT
+  diploma.png        → Diploma da cena final
+
+Para usar, edite ui.js (busque "COMO SUBSTITUIR").

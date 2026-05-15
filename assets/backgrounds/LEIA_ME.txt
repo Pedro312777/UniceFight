@@ -1,0 +1,16 @@
+=== PASTA: backgrounds ===
+
+Coloque aqui as imagens de fundo de cada fase:
+
+  menu_bg.png        → Fundo do menu principal (faculdade, imagem 2)
+  casa.png           → Fase 0: tutorial (casa e rua)
+  corredor1.png      → Fase 1: corredor do 1º semestre
+  laboratorio.png    → Fase 2: laboratório de informática
+  servidores.png     → Fase 3: sala de servidores
+  nuvem.png          → Fase 4: datacenter / nuvem
+  arena_games.png    → Fase 5: arena final de games
+
+Tamanho recomendado: 800x480 pixels (proporção 5:3)
+
+Para usar no jogo, edite phases.js:
+  data.bgImage = 'assets/backgrounds/nome_do_arquivo.png'

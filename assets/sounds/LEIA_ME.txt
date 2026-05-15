@@ -1,0 +1,27 @@
+=== PASTA: sounds ===
+
+Coloque aqui os arquivos de áudio:
+
+  menu_theme.mp3         → Música do menu
+  tutorial_theme.mp3     → Música do tutorial
+  battle_theme.mp3       → Música das fases
+  boss_pedro.mp3         → Tema do boss Pedro
+  boss_romulo.mp3        → Tema do boss Rômulo
+  boss_romes.mp3         → Tema do boss Romes
+  boss_geovanne.mp3      → Tema do boss Geovanne
+  boss_weverson.mp3      → Tema do boss Weverson
+  victory.mp3            → Vitória da fase
+  game_over.mp3          → Game over
+  final_theme.mp3        → Música da cena final
+  sfx_punch.mp3          → Som de soco
+  sfx_kick.mp3           → Som de chute
+  sfx_hurt.mp3           → Som de dano
+  sfx_jump.mp3           → Som de pulo
+  sfx_collect.mp3        → Som de coletar item
+
+=== COMO IMPLEMENTAR SONS ===
+No JavaScript, use a API Web Audio ou simples:
+  const sound = new Audio('assets/sounds/sfx_punch.mp3');
+  sound.play();
+
+Ou crie um sistema de gerenciamento no main.js.

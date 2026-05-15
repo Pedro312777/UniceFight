@@ -1,0 +1,30 @@
+=== PASTA: characters ===
+
+Coloque aqui os sprites dos personagens:
+
+  player_masc.png       → Sprite sheet do personagem masculino
+  player_fem.png        → Sprite sheet do personagem feminino
+  player_masc_select.png → Imagem na tela de seleção (masculino)
+  player_fem_select.png  → Imagem na tela de seleção (feminino)
+
+  boss_pedro.png        → Boss do 1º semestre
+  boss_romulo.png       → Boss do 2º semestre
+  boss_romes.png        → Boss do 3º semestre
+  boss_geovanne.png     → Boss do 4º semestre
+  boss_weverson.png     → Boss do 5º semestre
+
+  enemy_padrao.png      → Inimigo comum
+  enemy_computador.png  → Computador inimigo
+  enemy_materia.png     → Matéria difícil
+
+=== SPRITE SHEET ===
+Organize os frames assim (exemplo para 64x80px por frame):
+  Linha 0 (y=0):   IDLE (parado)    - 4 frames
+  Linha 1 (y=80):  ANDAR            - 6 frames
+  Linha 2 (y=160): PULAR            - 3 frames
+  Linha 3 (y=240): ATAQUE LEVE      - 4 frames
+  Linha 4 (y=320): ATAQUE PESADO    - 5 frames
+  Linha 5 (y=400): DEFENDER         - 2 frames
+  Linha 6 (y=480): HURT             - 2 frames
+
+Para integrar no jogo, edite player.js (busque "SPRITE SHEET").
