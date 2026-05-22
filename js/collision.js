@@ -40,6 +40,7 @@ function checkPlatformCollision(entity, platforms) {
     // COLISÃO PELOS PÉS
     // -----------------------------------
     const entityBottom = entity.y + entity.height;
+
     const prevBottom = entityBottom - entity.velocityY;
 
     const landedOn = (
@@ -101,14 +102,18 @@ function checkWallCollision(entity, canvasWidth) {
 
 // -----------------------------------------------
 // HITBOX DE ATAQUE
-// FUNCIONA PARA SOCO E CHUTE
+// BALANCEADA PARA FASE 4
 // -----------------------------------------------
 function checkAttackCollision(attacker, target) {
 
   // -----------------------------------
   // SÓ ATACA SE ESTIVER GOLPEANDO
   // -----------------------------------
-  if (!attacker.isAttacking && !attacker.isKicking) {
+  if (
+    !attacker.isAttacking &&
+    !attacker.isKicking &&
+    !attacker.isAirKicking
+  ) {
 
     return false;
   }
@@ -116,38 +121,77 @@ function checkAttackCollision(attacker, target) {
   let hitboxWidth;
   let hitboxHeight;
   let hitboxY;
+  let attackOffset;
 
   // -----------------------------------
   // SOCO
+  // MAIS JUSTO E CURTO
   // -----------------------------------
-  if (attacker.isAttacking) {
+  if (
+  attacker.isAttacking &&
+  attacker.attackTimer >= 8 &&
+  attacker.attackTimer <= 14
+  ) {
 
-    hitboxWidth = 60;
-    hitboxHeight = 40;
+    hitboxWidth = 42;
 
-    hitboxY = attacker.y + attacker.height * 0.2;
+    hitboxHeight = 34;
+
+    attackOffset = 8;
+
+    hitboxY = attacker.y + attacker.height * 0.28;
   }
 
   // -----------------------------------
-  // CHUTE
+  // CHUTE NORMAL
   // -----------------------------------
-  if (attacker.isKicking) {
+    if (
+    attacker.isKicking &&
+    attacker.attackTimer >= 8 &&
+    attacker.attackTimer <= 16
+  ) {
 
-    hitboxWidth = 70;
-    hitboxHeight = 30;
+      hitboxWidth = 58;
 
-    // Hitbox mais baixa
-    hitboxY = attacker.y + attacker.height * 0.65;
+      hitboxHeight = 24;
+
+      attackOffset = 12;
+
+      hitboxY =
+        attacker.y + attacker.height * 0.68;
+    }
+
+    // -----------------------------------
+  // CHUTE AÉREO
+  // -----------------------------------
+  if (
+    attacker.isAirKicking &&
+    attacker.attackTimer >= 6 &&
+    attacker.attackTimer <= 20
+  ) {
+
+    hitboxWidth = 80;
+
+    hitboxHeight = 80;
+
+    attackOffset = 0;
+
+    hitboxY = attacker.y;
   }
-
   // -----------------------------------
   // POSIÇÃO DA HITBOX
   // -----------------------------------
+
+  if (
+    hitboxWidth === undefined
+  ) {
+    return false;
+  }
   const attackHitbox = {
 
     x: attacker.facingRight
-      ? attacker.x + attacker.width
-      : attacker.x - hitboxWidth,
+      ? attacker.x + attacker.width - attackOffset
+      : attacker.x - hitboxWidth + attackOffset,
 
     y: hitboxY,
 
@@ -156,8 +200,30 @@ function checkAttackCollision(attacker, target) {
   };
 
   // -----------------------------------
+  // ALCANCE MÁXIMO
+  // EVITA ATAQUES INJUSTOS
+  // -----------------------------------
+  const centerA = attacker.x + attacker.width / 2;
+
+  const centerB = target.x + target.width / 2;
+
+  const distance = Math.abs(centerA - centerB);
+
+  const maxDistance =
+    (
+      attacker.isKicking ||
+      attacker.isAirKicking
+    )
+      ? 95
+      : 75;
+
+  if (distance > maxDistance) {
+
+    return false;
+  }
+
+  // -----------------------------------
   // DEBUG VISUAL (OPCIONAL)
-  // Descomente para visualizar hitbox
   // -----------------------------------
   /*
   const ctx = document
@@ -218,4 +284,52 @@ function checkObstacleCollision(entity, obstacles) {
   }
 
   return null;
+}
+
+// -----------------------------------------------
+// COLISÃO ENTRE PLAYER E BOSS
+// Impede atravessar personagens
+// -----------------------------------------------
+function resolveEntityCollision(player, boss) {
+
+  // ===================================
+  // PLAYER NO AR PODE ATRAVESSAR
+  // ===================================
+  if (!player.onGround) {
+    return;
+  }
+
+  // ===================================
+  // VERIFICA COLISÃO
+  // ===================================
+  if (!checkCollision(player, boss)) {
+    return;
+  }
+
+  const centerPlayer =
+    player.x + player.width / 2;
+
+  const centerBoss =
+    boss.x + boss.width / 2;
+
+  const overlap =
+    (player.width / 2 + boss.width / 2)
+    - Math.abs(centerPlayer - centerBoss);
+
+  // ===================================
+  // EMPURRA MENOS O BOSS
+  // ===================================
+  const playerPush = overlap * 0.75;
+  const bossPush = overlap * 0.25;
+
+  if (centerPlayer < centerBoss) {
+
+    player.x -= playerPush;
+    boss.x += bossPush;
+
+  } else {
+
+    player.x += playerPush;
+    boss.x -= bossPush;
+  }
 }
