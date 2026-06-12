@@ -83,27 +83,39 @@ const Menu = {
     // ctx.drawImage(bgMenu, 0, 0, canvas.width, canvas.height);
 
     // Fundo degradê (placeholder para a imagem da faculdade)
-    const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    grad.addColorStop(0, '#0D1B2A');
-    grad.addColorStop(1, '#1B3A5A');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+const background = sprites.get("menu");
 
-    // Partículas decorativas (simula pixel art)
-    ctx.fillStyle = 'rgba(255,255,255,0.05)';
-    for (let i = 0; i < 20; i++) {
-      ctx.fillRect(
-        Math.sin(i * 123) * canvas.width * 0.5 + canvas.width * 0.5,
-        (i * 47 + Date.now() * 0.01) % canvas.height,
-        4, 4
-      );
-    }
+if (background) {
+
+    ctx.drawImage(
+        background,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+}
+
+ctx.fillStyle = "rgba(0,0,0,0.55)";
+ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+);
+
+ctx.shadowColor = "black";
+ctx.shadowBlur = 8;
+ctx.shadowOffsetX = 2;
+ctx.shadowOffsetY = 2;
 
     // Título do jogo: UNICEFIGHT
     // ===== COMO MUDAR O TÍTULO =====
     // Troque a fonte e cor abaixo, ou use uma imagem:
     // ctx.drawImage(logoImg, x, y, width, height);
     ctx.font = 'bold 64px "Courier New", monospace';
+    ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'center';
 
     // Sombra do título
@@ -115,13 +127,32 @@ const Menu = {
     ctx.fillText('UNICEFIGHT', canvas.width / 2, 120);
 
     // Subtítulo
-    ctx.font = '16px "Courier New", monospace';
-    ctx.fillStyle = '#7AC';
+    ctx.font = 'bold 15px "Courier New", monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.75)';
     ctx.fillText('Centro Universitário · Semestre Final', canvas.width / 2, 148);
 
     // Opções do menu
     const startY = canvas.height / 2 - 40;
     const spacing = 52;
+
+    ctx.fillStyle = "rgba(0,0,0,0.45)";
+
+ctx.fillRect(
+    canvas.width / 2 - 180,
+    startY - 45,
+    360,
+    220
+);
+
+ctx.strokeStyle = "#00BFFF";
+ctx.lineWidth = 2;
+
+ctx.strokeRect(
+    canvas.width / 2 - 180,
+    startY - 45,
+    360,
+    220
+);
 
     this.options.forEach((option, index) => {
       const y = startY + index * spacing;
@@ -129,41 +160,60 @@ const Menu = {
 
       // Caixa de destaque na opção selecionada
       if (isSelected) {
-        ctx.fillStyle = 'rgba(0, 150, 255, 0.2)';
+      ctx.fillStyle = 'rgba(0,180,255,0.35)';
         ctx.fillRect(canvas.width / 2 - 130, y - 26, 260, 38);
         ctx.strokeStyle = '#00BFFF';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.strokeRect(canvas.width / 2 - 130, y - 26, 260, 38);
       }
 
       // Seta indicadora
       if (isSelected) {
         ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 22px monospace';
+        ctx.font = 'bold 28px monospace';
         ctx.fillText('▶', canvas.width / 2 - 115, y + 2);
       }
 
       // Texto da opção
       ctx.font = isSelected
-        ? 'bold 22px "Courier New", monospace'
-        : '20px "Courier New", monospace';
+    ? 'bold 30px "Courier New", monospace'
+    : 'bold 24px "Courier New", monospace';
       ctx.fillStyle = isSelected ? '#FFD700' : '#AACCEE';
       ctx.fillText(option, canvas.width / 2, y + 2);
 
       // Opção "Continuar" fica cinza se não há save
       if (option === 'Continuar' && !SaveSystem.hasSave()) {
-        ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        ctx.fillRect(canvas.width / 2 - 130, y - 26, 260, 38);
-        ctx.fillStyle = '#555';
-        ctx.font = '16px monospace';
-        ctx.fillText('(sem save)', canvas.width / 2, y + 18);
-      }
+
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+
+      ctx.fillRect(
+        canvas.width / 2 - 130,
+        y - 26,
+        260,
+        60
+      );
+
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+
+      ctx.font = 'bold 15px "Courier New", monospace';
+
+      ctx.fillText(
+        '(sem save)',
+        canvas.width / 2,
+        y + 28
+      );
+    }
     });
 
     // Instrução de navegação
-    ctx.font = '13px monospace';
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.fillText('↑↓ para navegar · ENTER para confirmar', canvas.width / 2, canvas.height - 30);
+ctx.font = 'bold 15px "Courier New", monospace';
+ctx.fillStyle = 'rgba(255,255,255,0.75)';
+
+ctx.fillText(
+    '▲▼ Navegar    •    ENTER Confirmar',
+    canvas.width / 2,
+    canvas.height - 28
+);
 
     ctx.textAlign = 'left';
   },
@@ -184,6 +234,7 @@ const Menu = {
       '━━━━━━━━━━━━━━━━━━━━━',
       'Desenvolvido por:',
       'Equipe UNICEFIGHT',
+      'Adryan · Artur · Eduardo · José Pedro · Pedro · Luan',
       '',
       'Professores:',
       'Pedro · Rômulo · Romes · Geovanne · Weverson',
@@ -287,13 +338,59 @@ const HUD = {
     ctx.font = '11px monospace';
     ctx.fillText(`${player.hp}/${player.maxHp}`, x + 42, y + 22);
 
-    // Barra de energia (amarela)
-    ctx.fillStyle = '#330';
-    ctx.fillRect(x + 40, y + 32, barW, 8);
-    ctx.fillStyle = '#FFD600';
-    ctx.fillRect(x + 40, y + 32, barW * (player.energy / player.maxEnergy), 8);
-    ctx.strokeStyle = '#888';
-    ctx.strokeRect(x + 40, y + 32, barW, 8);
+    // ===========================================
+    // BARRA DE ESPECIAL
+    // ===========================================
+    const specialRatio =
+    player.energy / player.maxEnergy;
+
+    // Fundo
+    ctx.fillStyle = '#1E1E1E';
+
+    ctx.fillRect(
+      x + 40,
+      y + 32,
+      barW,
+      12
+    );
+
+    // Barra preenchida
+    ctx.fillStyle =
+      player.specialReady
+        ? '#00E5FF'
+        : '#2979FF';
+
+    ctx.fillRect(
+      x + 40,
+      y + 32,
+      barW * specialRatio,
+      12
+    );
+
+    // Borda
+    ctx.strokeStyle = '#CCCCCC';
+
+    ctx.lineWidth = 1;
+
+    ctx.strokeRect(
+      x + 40,
+      y + 32,
+      barW,
+      12
+    );
+
+    // Texto
+    ctx.fillStyle = '#FFFFFF';
+
+    ctx.font = 'bold 10px monospace';
+
+    ctx.fillText(
+    player.specialReady
+      ? '100%'
+      : `${Math.floor(player.energy)}%`,
+      x + 44,
+      y + 42
+    );
   },
 
   // Timer central
@@ -318,77 +415,152 @@ const HUD = {
 
   // Barra de vida do boss (direita)
   drawBossHP(ctx, canvas, boss, currentPhase) {
-    const barW = 180;
-    const barH = 20;
-    const x = canvas.width - barW - 65;
+
+    const x = canvas.width - 240;
     const y = 20;
 
-    // Retrato do boss (placeholder)
+    const barW = 180;
+    const barH = 20;
+
+    // =========================================
+    // RETRATO
+    // =========================================
     ctx.fillStyle = '#533';
-    ctx.fillRect(canvas.width - 50, y - 5, 40, 40);
+
+    ctx.fillRect(
+      x + 185,
+      y - 5,
+      40,
+      40
+    );
+
     ctx.fillStyle = boss.color;
-    ctx.fillRect(canvas.width - 48, y - 3, 36, 36);
-    ctx.font = 'bold 11px monospace';
-    ctx.fillStyle = '#FFF';
-    ctx.fillText('B', canvas.width - 36, y + 18);
 
-    // Nome do boss
-    ctx.textAlign = 'right';
+    ctx.fillRect(
+      x + 187,
+      y - 3,
+      36,
+      36
+    );
+
+    ctx.font = 'bold 16px monospace';
+
     ctx.fillStyle = '#FFF';
+
+    ctx.fillText(
+      'B',
+      x + 198,
+      y + 18
+    );
+
+    // =========================================
+    // NOME
+    // MESMO ESPAÇAMENTO DO PLAYER
+    // =========================================
+    ctx.fillStyle = '#FFF';
+
     ctx.font = 'bold 12px monospace';
-    ctx.fillText(boss.name, canvas.width - 52, y + 5);
-    ctx.textAlign = 'left';
 
-    // Barra de HP do boss
+    ctx.fillText(
+      boss.name,
+      x + 105,
+      y + 5
+    );
+
+    // =========================================
+    // FUNDO HP
+    // =========================================
     ctx.fillStyle = '#500';
-    ctx.fillRect(x, y + 8, barW, barH);
 
-    const hpRatio = boss.hp / boss.maxHp;
-    const hpColor = hpRatio > 0.5 ? '#00E676' : hpRatio > 0.25 ? '#FFD600' : '#FF1744';
+    ctx.fillRect(
+      x,
+      y + 8,
+      barW,
+      barH
+    );
+
+    // =========================================
+    // VIDA
+    // =========================================
+    const hpRatio =
+      boss.hp / boss.maxHp;
+
+    const hpColor =
+      hpRatio > 0.5
+        ? '#00E676'
+        : hpRatio > 0.25
+          ? '#FFD600'
+          : '#FF1744';
+
     ctx.fillStyle = hpColor;
-    ctx.fillRect(x, y + 8, barW * hpRatio, barH);
 
-    // Efeito fase 2 (brilho vermelho)
-    if (boss.phase === 2) {
-      ctx.strokeStyle = '#F00';
-      ctx.lineWidth = 2;
-    } else {
-      ctx.strokeStyle = '#AAA';
-      ctx.lineWidth = 1;
-    }
-    ctx.strokeRect(x, y + 8, barW, barH);
+    ctx.fillRect(
+      x,
+      y + 8,
+      barW * hpRatio,
+      barH
+    );
 
-    // HP em texto
+    // =========================================
+    // BORDA
+    // =========================================
+    ctx.strokeStyle = '#AAA';
+
+    ctx.lineWidth = 1;
+
+    ctx.strokeRect(
+      x,
+      y + 8,
+      barW,
+      barH
+    );
+
+    // =========================================
+    // TEXTO VIDA
+    // =========================================
     ctx.fillStyle = '#FFF';
-    ctx.font = '11px monospace';
-    ctx.fillText(`${boss.hp}/${boss.maxHp}`, x + 2, y + 22);
 
-    // Indicador de fase do boss
-    if (boss.phase === 2) {
-      ctx.fillStyle = '#FF1744';
-      ctx.font = 'bold 10px monospace';
-      ctx.textAlign = 'right';
-      ctx.fillText('⚡ ENRAIVECIDO!', canvas.width - 52, y + 42);
-      ctx.textAlign = 'left';
-    }
+    ctx.font = '11px monospace';
+
+    ctx.fillText(
+      `${boss.hp}/${boss.maxHp}`,
+      x + 2,
+      y + 22
+    );
   },
 
   // Nome da fase atual (canto inferior esquerdo)
   drawPhaseInfo(ctx, currentPhase) {
     const phaseNames = [
       'Tutorial: Casa → Faculdade',
-      '1º Semestre: Lógica de Programação',
-      '2º Semestre: Arquitetura',
-      '3º Semestre: Banco de Dados',
-      '4º Semestre: Computação em Nuvem',
+      '1º Semestre: ALGORITMOS E PROGRAMAÇÃO',
+      '2º Semestre: Metodologia Ágil Scrum',
+      '3º Semestre: Programação Estruturada',
+      '4º Semestre: Engenharia de Requisitos',
       '5º Semestre: Programação em Games'
     ];
 
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillRect(10, 70, 280, 22);
+    ctx.fillRect(
+      canvas.width / 2 - 145,
+      58,
+      290,
+      20
+    );
+
     ctx.fillStyle = '#7AC';
+
     ctx.font = '12px monospace';
-    ctx.fillText(phaseNames[currentPhase] || '', 15, 85);
+
+    ctx.textAlign = 'center';
+
+    ctx.fillText(
+      phaseNames[currentPhase] || '',
+      canvas.width / 2,
+      72
+    );
+
+    ctx.textAlign = 'left';
   },
 
   // Dica de controles (canto inferior)
@@ -401,8 +573,261 @@ const HUD = {
       'A/D:Mover  W/Espaço:Pular  J:Soco  K:Chute  L:Defesa  P:Pausa',
       10, canvas.height - 7
     );
+
+  if (CombatQuote.visible) {
+
+  CombatQuote.timer--;
+
+  if (CombatQuote.timer <= 0) {
+
+    CombatQuote.visible = false;
+
+  } else {
+
+ctx.font =
+  "14px Arial";
+
+const maxWidth = 220;
+
+const words =
+  CombatQuote.text.split(" ");
+
+const lines = [];
+
+let currentLine = "";
+
+for (const word of words) {
+
+  const testLine =
+    currentLine +
+    word +
+    " ";
+
+  const width =
+    ctx.measureText(
+      testLine
+    ).width;
+
+  if (
+    width > maxWidth &&
+    currentLine !== ""
+  ) {
+
+    lines.push(
+      currentLine
+    );
+
+    currentLine =
+      word + " ";
+
+  } else {
+
+    currentLine =
+      testLine;
+  }
+}
+
+lines.push(
+  currentLine
+);
+
+const lineHeight = 18;
+
+const boxWidth =
+  maxWidth + 20;
+
+const boxHeight =
+  lines.length *
+  lineHeight +
+  20;
+
+let boxX =
+
+  CombatQuote.x -
+
+  boxWidth / 2;
+
+if (boxX < 10) {
+
+  boxX = 10;
+}
+
+if (
+
+  boxX + boxWidth >
+
+  canvas.width - 10
+
+) {
+
+  boxX =
+
+    canvas.width -
+
+    boxWidth -
+
+    10;
+}
+
+const boxY =
+  CombatQuote.y -
+  80;
+
+ctx.fillStyle =
+  "rgba(0,0,0,0.8)";
+
+ctx.fillRect(
+
+  boxX,
+
+  boxY,
+
+  boxWidth,
+
+  boxHeight
+);
+
+ctx.strokeStyle =
+  "#ffffff";
+
+ctx.strokeRect(
+
+  boxX,
+
+  boxY,
+
+  boxWidth,
+
+  boxHeight
+);
+
+ctx.fillStyle =
+  "#ffffff";
+
+for (
+  let i = 0;
+  i < lines.length;
+  i++
+) {
+
+  ctx.fillText(
+
+    lines[i],
+
+    boxX + 10,
+
+    boxY + 20 +
+    i * lineHeight
+  );
+}
+  }
+}
   }
 };
+
+// ===================================================
+// COMBO UI
+// ===================================================
+function drawComboCounter() {
+
+  const player =
+    Game.player;
+
+  if (
+    player.comboDisplayTimer <= 0
+  ) {
+
+    return;
+  }
+
+  ctx.save();
+
+  const heavyCombo =
+    player.comboHits >= 5;
+
+  ctx.fillStyle =
+    heavyCombo
+      ? '#FFAA00'
+      : '#FFD700';
+
+  ctx.font =
+    heavyCombo
+      ? 'bold 24px monospace'
+      : 'bold 20px monospace';
+
+  ctx.textAlign =
+    'center';
+
+  // ===================================
+  // POP EFFECT SUAVE
+  // ===================================
+  const scale =
+    1 +
+    Math.sin(
+      performance.now() *
+      0.01
+    ) * 0.02;
+
+  ctx.translate(
+    GAME_WIDTH / 2,
+    60
+  );
+
+  ctx.scale(scale, scale);
+
+if (player.comboComplete) {
+
+  ctx.fillText(
+
+    "COMBO COMPLETO",
+
+    0,
+
+    0
+  );
+}
+
+  ctx.restore();
+}
+
+const CombatQuote = {
+
+  visible: false,
+
+  text: "",
+
+  timer: 0,
+
+  x: 0,
+
+  y: 0
+};
+
+function showCombatQuote(
+  text,
+  x,
+  y
+) {
+
+  CombatQuote.visible = true;
+
+  CombatQuote.text = text;
+
+  CombatQuote.timer = 180;
+
+  CombatQuote.x = x;
+
+  CombatQuote.y = y;
+}
+
+function clearCombatQuote() {
+
+  CombatQuote.visible = false;
+
+  CombatQuote.text = "";
+
+  CombatQuote.timer = 0;
+}
 
 // -----------------------------------------------
 // CAIXA DE DIÁLOGO (Mestre Misterioso / Boss)
@@ -544,6 +969,59 @@ const DialogBox = {
   }
 };
 
+// ===================================================
+// PAUSE
+// ===================================================
+function drawPauseScreen() {
+
+  ctx.save();
+
+  ctx.fillStyle =
+    'rgba(0,0,0,0.6)';
+
+  ctx.fillRect(
+
+    0,
+    0,
+
+    GAME_WIDTH,
+    GAME_HEIGHT
+  );
+
+  ctx.fillStyle = '#FFF';
+
+  ctx.textAlign =
+    'center';
+
+  ctx.font =
+    'bold 42px monospace';
+
+  ctx.fillText(
+
+    'PAUSADO',
+
+    GAME_WIDTH / 2,
+
+    GAME_HEIGHT / 2 - 20
+  );
+
+  ctx.font =
+    '20px monospace';
+
+  ctx.fillText(
+
+    'Pressione P para continuar',
+
+    GAME_WIDTH / 2,
+
+    GAME_HEIGHT / 2 + 30
+  );
+
+  ctx.restore();
+}
+
+
+
 // -----------------------------------------------
 // TELA DERROTA
 // -----------------------------------------------
@@ -571,23 +1049,61 @@ function drawGameOver(ctx, canvas) {
   ctx.textAlign = 'left';
 }
 
-// -----------------------------------------------
-// TELA DE PAUSA
-// -----------------------------------------------
-function drawPause(ctx, canvas) {
-  ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+function drawPhaseCompleteScreen() {
+
+  ctx.save();
+
+  ctx.fillStyle =
+    'rgba(0,0,0,0.75)';
+
+  ctx.fillRect(
+    0,
+    0,
+    GAME_WIDTH,
+    GAME_HEIGHT
+  );
+
+  ctx.fillStyle = '#FFFFFF';
 
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#FFD700';
-  ctx.font = 'bold 48px "Courier New", monospace';
-  ctx.fillText('PAUSADO', canvas.width / 2, canvas.height / 2 - 20);
 
-  ctx.fillStyle = '#AAD';
-  ctx.font = '18px monospace';
-  ctx.fillText('P = Continuar   BACKSPACE = Menu', canvas.width / 2, canvas.height / 2 + 30);
+  ctx.font =
+    'bold 36px Arial';
 
-  ctx.textAlign = 'left';
+  ctx.fillText(
+
+    `Parabéns!`,
+
+    GAME_WIDTH / 2,
+
+    180
+  );
+
+  ctx.font =
+    'bold 24px Arial';
+
+  ctx.fillText(
+
+    `Você concluiu o ${Game.currentPhaseIndex + 1}º semestre`,
+
+    GAME_WIDTH / 2,
+
+    240
+  );
+
+  ctx.font =
+    '20px Arial';
+
+  ctx.fillText(
+
+    'Pressione ENTER para continuar',
+
+    GAME_WIDTH / 2,
+
+    320
+  );
+
+  ctx.restore();
 }
 
 // -----------------------------------------------
@@ -771,3 +1287,6 @@ const CharacterSelect = {
     this.selectedGender = this.selectedGender === 'masculino' ? 'feminino' : 'masculino';
   }
 };
+
+window.showCombatQuote =
+  showCombatQuote;

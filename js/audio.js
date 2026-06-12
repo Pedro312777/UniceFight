@@ -337,7 +337,10 @@ class AudioManagerClass {
 // INSTÂNCIA GLOBAL
 // ===================================================
 const AudioManager =
-  new AudioManagerClass();
+  new AudioManagerClass(
+
+    
+  );
 
 // ===================================================
 // AUTO INIT
@@ -348,6 +351,15 @@ window.addEventListener(
 
     AudioManager.init();
 
+    // Destrava o áudio em todos os sons carregados
+    for (const key in AudioManager.sounds) {
+      const audio = AudioManager.sounds[key].audio;
+      audio.play().then(() => {
+        audio.pause();
+        audio.currentTime = 0;
+      }).catch(() => {});
+    }
+
   },
   { once: true }
 );
@@ -355,41 +367,23 @@ window.addEventListener(
 // ===================================================
 // EXEMPLOS FUTUROS
 // ===================================================
-/*
+
 
 // -----------------------------------------------
 // CARREGAR
 // -----------------------------------------------
-AudioManager.loadSound(
-  'punch',
-  'assets/audio/punch.wav'
-);
-
-AudioManager.loadSound(
-  'kick',
-  'assets/audio/kick.wav'
-);
-
-AudioManager.loadSound(
-  'hurt',
-  'assets/audio/hurt.wav'
-);
-
-AudioManager.loadSound(
-  'phase1_music',
-  'assets/audio/phase1.mp3',
-  {
-    volume: 0.5,
-    loop: true
-  }
-);
-
+// ===================================================
+// CARREGAR SONS DO JOGO
+// ===================================================
+AudioManager.loadSound('punch', 'assets/audio/punch.wav');
+AudioManager.loadSound('kick', 'assets/audio/kick.wav');
+AudioManager.loadSound('start', 'assets/audio/start.wav');
+AudioManager.loadSound('victory', 'assets/audio/victory.wav');
+AudioManager.loadSound('defeat', 'assets/audio/defeat.wav');
 // -----------------------------------------------
 // TOCAR
 // -----------------------------------------------
-AudioManager.play('punch');
 
-AudioManager.playMusic('phase1_music');
 
 // -----------------------------------------------
 // PARAR
@@ -401,4 +395,3 @@ AudioManager.stopMusic();
 // -----------------------------------------------
 AudioManager.toggleMute();
 
-*/

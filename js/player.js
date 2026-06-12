@@ -1,946 +1,1588 @@
 // ===================================================
-// UNICEFIGHT - PLAYER CLEAN ARCHITECTURE
-// FASE 5 READY
+// UNICEFIGHT - PLAYER COMBAT REBALANCE
+// PLAYER MAIS FORTE CONTRA BOSS
+// pacing continua arcade/lento
 // ===================================================
-// OBJETIVO:
-// ✔ Player focado em gameplay
-// ✔ Sem efeitos visuais internos
-// ✔ Sem partículas internas
-// ✔ Sem screen shake interno
-// ✔ Preparado para sprite sheets
-// ✔ Preparado para AnimationManager
-// ✔ Preparado para AudioManager
-// ✔ Preparado para EffectsManager
-// ✔ Código muito mais modular
+// ALTERAÇÕES:
+// ✔ player causa mais dano no boss
+// ✔ combos recompensam mais
+// ✔ especial continua forte sem quebrar jogo
+// ✔ neutral continua equilibrado
+// ✔ boss continua tank
+// ✔ pacing lento preservado
+// ✔ recovery continua justa
+// ✔ combate menos frustrante
 // ===================================================
+
 
 class Player {
 
-  constructor(x, y, gender = 'masculino') {
 
-    // -----------------------------------
-    // POSIÇÃO
-    // -----------------------------------
-    this.x = x;
-    this.y = y;
+constructor(x, y, gender = 'masculino') {
 
-    this.width = 48;
-    this.height = 72;
 
-    // -----------------------------------
-    // MOVIMENTO
-    // -----------------------------------
-    this.velocityX = 0;
-    this.velocityY = 0;
+this.x = x;
+this.y = y;
 
-    this.speed = 2;
 
-    this.jumpForce = -14;
+// ========================================
+// CORPO FÍSICO (colisão real)
+// ========================================
 
-    this.gravity = 0.5;
 
-    this.onGround = false;
+this.width = 54;
+this.height = 80;
 
-    // -----------------------------------
-    // DIREÇÃO
-    // -----------------------------------
+
+// ========================================
+// VISUAL DO SPRITE
+// ========================================
+
+
+this.spriteScale = 1.0;
+
+
+this.spriteOffsetX = 0;
+
+
+this.spriteOffsetY = 0;
+
+
+// ===================================================
+// MOVIMENTO
+// ===================================================
+this.velocityX = 0;
+this.velocityY = 0;
+
+
+this.speed = 3.15;
+this.maxSpeed = 6.0;
+
+
+this.jumpForce = -12;
+this.gravity = 0.60;
+
+
+this.onGround = false;
+
+
+// ===================================================
+// DIREÇÃO
+// ===================================================
+this.facingRight = true;
+
+
+// ===================================================
+// PERSONAGEM
+// ===================================================
+this.gender = gender;
+
+
+// ===================================================
+// VIDA
+// ===================================================
+this.maxHp = 185;
+this.hp = 185;
+
+
+// ===================================================
+// ENERGIA
+// ===================================================
+this.specialMeter = 0;
+this.energy = 0;
+
+
+this.maxSpecialMeter = 100;
+this.maxEnergy = 100;
+
+
+// ===============================================
+// LEVEMENTE MAIS RÁPIDO
+// ===============================================
+this.energyRegenRate = 0.024;
+
+
+// ===============================================
+// MAIS RECOMPENSA POR ACERTAR
+// ===============================================
+this.hitEnergyGain = 4;
+
+
+// ===============================================
+// MAIS METER AO TOMAR HIT
+// ===============================================
+this.damageEnergyGain = 5;
+
+
+// ===================================================
+// ESTADOS
+// ===================================================
+this.isDead = false;
+this.isHurt = false;
+
+
+this.isMoving = false;
+this.isJumping = false;
+this.isDefending = false;
+
+
+this.isDashing = false;
+
+
+this.isAttacking = false;
+this.isKicking = false;
+this.isAirKicking = false;
+
+
+this.isSpecialAttacking = false;
+
+
+this.isLaughing = false;
+
+
+this.laughTimer = 0;
+
+
+this.speedMultiplier = 1;
+
+
+this.defenseMultiplier = 1;
+
+
+// ===================================================
+// COMBO
+// ===================================================
+this.comboStep = 0;
+
+
+this.comboTimer = 0;
+
+
+this.isComboFinisher = true;
+
+
+this.finisherReady = false;
+
+
+this.finisherWindow = 60;
+
+
+this.comboDisplayTimer = 0;
+
+
+this.comboHitsConnected = 0;
+
+
+this.comboArmor = false;
+
+
+this.comboComplete = false;
+
+
+// ===============================================
+// COMBO WINDOW LEVEMENTE MAIOR
+// ===============================================
+
+
+this.comboQueued = false;
+
+
+this.comboLocked = false;
+this.comboLockTimer = 0;
+
+
+// ===================================================
+// COMBATE
+// ===================================================
+this.attackDamage = 0;
+
+
+// ===============================================
+// MAIS DANO
+// ===============================================
+this.kickDamage = 8;
+this.airKickDamage = 10;
+
+
+this.attackAlreadyHit = false;
+
+
+// ===================================================
+// KNOCKBACK
+// ===================================================
+this.knockbackForce = 3.7;
+
+
+// ===================================================
+// HITSTOP
+// ===================================================
+this.hitstop = 0;
+
+
+// ===================================================
+// TIMERS
+// ===================================================
+this.attackTimer = 0;
+this.attackCooldown = 0;
+
+
+this.hurtTimer = 0;
+
+
+this.hurtDuration = 14;
+
+
+this.invulnerabilityDuration = 12;
+
+
+this.invulnerabilityTimer = 0;
+
+this.perfectDodgeProtectionDuration = 180;
+
+
+this.easyAttackProtection = 0;
+
+
+this.dashTimer = 0;
+
+
+this.easyAttackWindow = 0;
+
+
+this.slowTimer = 0;
+// ===================================================
+// DASH
+// ===================================================
+this.dashDirection = 0;
+
+
+this.dashSpeed = 7.1;
+
+
+// ===================================================
+// ESTADOS AVANÇADOS TIMERS
+// ===================================================
+/*this.knockdownTimer = 0;*/
+
+
+// ===================================================
+// BUFFER
+// ===================================================
+this.attackBuffer = 0;
+
+this.controlsInverted = false;
+this.controlHackTimer = 0;
+// ===================================================
+// ANIMAÇÃO
+// ===================================================
+this.currentAnimation = 'idle';
+
+
+this.currentFrame = 0;
+this.animationTimer = 0;
+
+
+// ===================================================
+// ===================================================
+// SPRITE SYSTEM
+// ===================================================
+
+
+this.spriteSheet =
+sprites.get(
+"player"
+);
+
+
+this.animations =
+AnimationData.playerMasculino;
+
+this.spriteOffsetY = -60;
+
+// ===================================
+// ESCALA VISUAL
+// ===================================
+if (gender === "feminino") {
+
+    this.animations =
+    AnimationData.playerFeminino;
+
+    this.spriteScale = 1.26;
+
+} else {
+
+    this.animations =
+    AnimationData.playerMasculino;
+
+    this.spriteScale = 1.30;
+
+}
+
+
+
+// ===================================================
+// SCORE
+// ===================================================
+this.score = 0;
+
+
+// ===================================================
+// COLISÃO CORPORAL
+// ===================================================
+this.bodyPushForce = 0.45;
+
+
+this.contactSlowdown = 0.82;
+
+
+this.bodyPushResistance = 1;
+
+
+// ===================================================
+// COMBO COUNTER
+// ===================================================
+this.comboHits = 0;
+
+
+console.log(
+  "SPRITE PLAYER:",
+  this.spriteSheet
+);
+
+
+}
+
+
+
+
+// ===================================================
+// UPDATE
+// ===================================================
+update(platforms, canvasWidth, canvasHeight) {
+
+
+if (this.isDead) return;
+
+
+if (this.hitstop > 0) {
+
+
+this.hitstop--;
+return;
+}
+
+
+if (this.slowTimer > 0) {
+
+
+    this.slowTimer--;
+
+
+}
+
+
+this.handleInput();
+
+
+this.applyPhysics();
+
+
+this.handleTimers();
+
+
+
+
+this.regenerateEnergy();
+
+
+checkPlatformCollision(
+this,
+platforms
+);
+
+
+checkWallCollision(
+this,
+canvasWidth
+);
+
+
+const groundY =
+canvasHeight - this.height;
+
+
+if (this.y >= groundY) {
+
+
+this.y = groundY;
+
+
+this.velocityY = 0;
+
+
+this.onGround = true;
+
+
+//if (
+//this.isLaunched
+//) {
+
+
+//this.knockDown();
+//}
+}
+}
+
+
+// ===================================================
+// INPUT
+// ===================================================
+handleInput() {
+
+
+if (
+    this.isHurt &&
+    this.comboStep === 0
+){
+    return;
+}
+
+
+this.isMoving = false;
+
+
+let currentSpeed =
+    this.speed *
+    this.speedMultiplier;
+
+
+if (this.slowTimer > 0) {
+
+
+    currentSpeed *= 0.55;
+
+
+}
+
+
+if (this.isDashing) {
+
+
+this.velocityX =
+this.dashSpeed *
+this.dashDirection;
+
+
+return;
+}
+
+
+if (
+!this.isAttacking &&
+!this.isKicking &&
+!this.isSpecialAttacking
+) {
+
+
+const leftPressed =
+
+    this.controlsInverted
+
+    ? keys.right
+
+    : keys.left;
+
+const rightPressed =
+
+    this.controlsInverted
+
+    ? keys.left
+
+    : keys.right;
+
+if (leftPressed) {
+
+    this.velocityX =
+    -currentSpeed;
+
+    this.facingRight = false;
+
+    this.isMoving = true;
+}
+
+else if (rightPressed) {
+
+    this.velocityX =
+    currentSpeed;
+
     this.facingRight = true;
 
-    // -----------------------------------
-    // PERSONAGEM
-    // -----------------------------------
-    this.gender = gender;
+    this.isMoving = true;
+}
 
-    // -----------------------------------
-    // VIDA
-    // -----------------------------------
-    this.maxHp = 100;
 
-    this.hp = 100;
+else {
 
-    // -----------------------------------
-    // ESTADOS
-    // -----------------------------------
-    this.isDead = false;
 
-    this.isHurt = false;
+this.velocityX *= 0.76;
 
-    this.isMoving = false;
 
-    this.isJumping = false;
+if (
+Math.abs(this.velocityX) < 0.08
+) {
 
-    this.isDefending = false;
 
-    // -----------------------------------
-    // ATAQUES
-    // -----------------------------------
-    this.isAttacking = false;
+this.velocityX = 0;
+}
+}
+}
 
-    this.isKicking = false;
 
-    this.isAirKicking = false;
+if (
+keys.up &&
+this.onGround &&
+!this.isAttacking
+) {
 
-    // -----------------------------------
-    // COMBATE
-    // -----------------------------------
-    this.attackDamage = 10;
 
-    this.kickDamage = 20;
+this.velocityY =
+this.jumpForce;
 
-    this.airKickDamage = 10;
 
-    this.attackAlreadyHit = false;
+this.onGround = false;
 
-    // -----------------------------------
-    // TIMERS
-    // -----------------------------------
-    this.attackTimer = 0;
 
-    this.attackCooldown = 0;
+this.isJumping = true;
 
-    this.hurtTimer = 0;
 
-    this.hurtDuration = 12;
+// ESQUIVA DO ATAQUE DE DISTRAÇÃO
+if (this.easyAttackWindow > 0) {
 
-    this.invulnerabilityDuration = 35;
 
-    this.invulnerabilityTimer = 0;
+    this.easyAttackProtection =
+        this.perfectDodgeProtectionDuration;
 
-    // ===================================================
-    // SISTEMA DE ANIMAÇÃO
-    // ===================================================
-    this.currentAnimation = 'idle';
 
-    this.currentFrame = 0;
+    this.easyAttackWindow = 0;
 
-    this.animationTimer = 0;
 
-    // -----------------------------------
-    // ANIMAÇÕES
-    // -----------------------------------
-    this.animations = {
+    console.log(
+      "ESQUIVA PERFEITA"
+    );
+}
+}
 
-      idle: {
-        frames: 4,
-        speed: 12,
-        loop: true
-      },
 
-      walk: {
-        frames: 6,
-        speed: 6,
-        loop: true
-      },
+if (this.onGround) {
 
-      jump: {
-        frames: 2,
-        speed: 10,
-        loop: false
-      },
 
-      punch: {
-        frames: 3,
-        speed: 5,
-        loop: false
-      },
+this.isJumping = false;
+}
 
-      kick: {
-        frames: 4,
-        speed: 5,
-        loop: false
-      },
 
-      airKick: {
-        frames: 4,
-        speed: 5,
-        loop: false
-      },
+this.isDefending =
+keys.defend &&
+!this.isAttacking &&
+!this.isKicking &&
+!this.isAirKicking;
 
-      defend: {
-        frames: 1,
-        speed: 1,
-        loop: true
-      },
 
-      hurt: {
-        frames: 2,
-        speed: 8,
-        loop: false
-      },
 
-      death: {
-        frames: 5,
-        speed: 10,
-        loop: false
-      }
-    };
 
-    // -----------------------------------
-    // SCORE
-    // -----------------------------------
-    this.score = 0;
-  }
+if (keys.defend) {
 
-  // ===================================================
-  // UPDATE
-  // ===================================================
-  update(platforms, canvasWidth, canvasHeight) {
 
-    if (this.isDead) {
-      return;
-    }
+  console.log(
+    "PLAYER UPDATE",
+    "defending:",
+    this.isDefending,
+    "attacking:",
+    this.isAttacking,
+    "kicking:",
+    this.isKicking,
+    "airKick:",
+    this.isAirKicking
+  );
+}
 
-    this.handleInput();
 
-    this.applyPhysics();
+console.log(
+    "DEFENDENDO:",
+    this.isDefending
+);
 
-    this.handleTimers();
 
-    this.updateAnimation();
+if (
+keys.dash &&
+!this.isDashing &&
+!this.isAttacking &&
+!this.isKicking &&
+this.attackCooldown <= 0
+) {
 
-    // Colisão com plataformas
-    checkPlatformCollision(
-      this,
-      platforms
+
+if (keys.left) {
+
+
+this.startDash(-1);
+}
+
+
+if (keys.right) {
+
+
+this.startDash(1);
+}
+}
+
+
+if (
+keys.special &&
+this.specialMeter >= 100 &&
+!this.isSpecialAttacking
+) {
+
+
+this.startSpecial();
+}
+
+
+if (
+keys.attack ||
+keys.kick
+) {
+
+
+this.attackBuffer = 5;
+}
+
+
+if (
+this.attackBuffer > 0 &&
+this.attackCooldown <= 0
+) {
+
+
+if (
+keys.kick &&
+!this.onGround
+) {
+
+
+this.startAirKick();
+
+
+this.attackBuffer = 0;
+
+
+return;
+}
+
+
+if (
+keys.attack &&
+this.onGround
+) {
+console.log("BOTAO ATAQUE DETECTADO");
+this.startPunch();
+
+
+this.attackBuffer = 0;
+
+
+return;
+}
+
+
+if (
+keys.kick &&
+this.onGround
+) {
+
+
+this.startKick();
+
+
+this.attackBuffer = 0;
+}
+}
+}
+
+
+// ===================================================
+// COMBO
+// ===================================================
+startPunch() {
+
+
+if (this.comboLocked) {
+return;
+}
+console.log(
+  "COMBO STEP:",
+  this.comboStep,
+  "TIMER:",
+  this.comboTimer,
+  "CD:",
+  this.attackCooldown
+);
+
+
+if (
+this.isAttacking &&
+this.attackTimer > 2
+) {
+
+
+this.comboQueued = true;
+return;
+}
+
+
+if (
+this.isKicking ||
+this.isSpecialAttacking
+) {
+return;
+}
+
+AudioManager.play('punch'); // <-- ADICIONADO AQUI
+
+
+this.isAttacking = true;
+
+
+this.attackAlreadyHit = false;
+
+
+if (this.comboStep === 0) {
+
+
+  this.comboStep = 1;
+}
+else if (this.comboStep === 1) {
+
+
+  this.comboStep = 2;
+}
+else {
+
+
+  return;
+}
+
+
+this.comboTimer = 50;
+
+
+// ===================================================
+// JAB
+// ===================================================
+if (this.comboStep === 1) {
+
+
+// MAIS DANO
+this.attackDamage = 4;
+
+
+this.attackTimer = 8;
+
+
+// RECOVERY MENOR
+this.attackCooldown = 11;
+}
+
+
+// ===================================================
+// STRAIGHT
+// ===================================================
+else if (this.comboStep === 2) {
+
+
+  this.attackDamage = 6;
+
+
+  this.attackTimer = 9;
+
+
+  this.attackCooldown = 14;
+
+
+  this.comboTimer =
+  this.finisherWindow;
+
+
+  this.velocityX =
+    this.facingRight
+      ? 2.0
+      : -2.0;
+
+
+this.comboArmor = true;
+}
+
+
+}
+
+
+// ===================================================
+// CHUTE
+// ===================================================
+startKick() {
+
+
+// FINALIZADOR DO COMBO
+
+
+  console.log(
+        "KICK",
+        "hits:", this.comboHitsConnected,
+        "timer:", this.comboTimer,
+        "step:", this.comboStep,
+        "cooldown:", this.attackCooldown
     );
 
-    // Colisão com parede
-    checkWallCollision(
-      this,
-      canvasWidth
+
+if (
+    this.comboHitsConnected >= 2 &&
+    this.comboTimer > 0
+){
+
+ AudioManager.play('kick'); // <-- ADICIONADO AQUI (finalizador)
+
+
+  this.isAttacking = false;
+
+
+  this.isKicking = true;
+
+
+  this.attackAlreadyHit = false;
+
+
+  this.attackDamage = 10;
+
+
+  this.attackTimer = 16;
+
+
+  this.attackCooldown = 24;
+
+
+  this.isComboFinisher = true;
+
+
+  this.finisherReady = true;
+
+
+  this.velocityX =
+    this.facingRight
+      ? 1.8
+      : -1.8;
+
+
+  this.comboLocked = true;
+
+
+  this.comboLockTimer = 20;
+
+
+  // RESETA O COMBO
+
+
+  console.log(
+        "COMBO RESETADO",
+        "comboHitsConnected:",
+        this.comboHitsConnected
     );
 
-    // Chão
-    if (
-      this.y + this.height >=
-      canvasHeight
-    ) {
 
-      this.y =
-        canvasHeight - this.height;
+  return;
+}
 
-      this.velocityY = 0;
 
-      this.onGround = true;
-    }
-  }
+if (
+this.isAttacking ||
+this.isKicking ||
+this.isSpecialAttacking
+) {
+return;
+}
 
-  // ===================================================
-  // INPUT
-  // ===================================================
-  handleInput() {
 
-    // Hurt trava controle
-    if (this.isHurt) {
-      return;
-    }
+this.isKicking = true;
 
-    this.isMoving = false;
 
-    // -----------------------------------
-    // MOVIMENTO
-    // -----------------------------------
-    if (keys.left) {
+this.attackAlreadyHit = false;
 
-      this.velocityX = -this.speed;
 
-      this.facingRight = false;
+this.attackDamage =
+this.kickDamage;
 
-      this.isMoving = true;
-    }
 
-    else if (keys.right) {
+this.attackTimer = 18;
 
-      this.velocityX = this.speed;
 
-      this.facingRight = true;
+// LEVEMENTE MENOR
+this.attackCooldown = 24;
 
-      this.isMoving = true;
-    }
 
-    else {
+this.velocityX =
+this.facingRight
+? 1.3
+: -1.3;
+}
 
-      this.velocityX *= 0.82;
 
-      if (
-        Math.abs(this.velocityX) < 0.1
-      ) {
+// ===================================================
+// AIR KICK
+// ===================================================
+startAirKick() {
 
-        this.velocityX = 0;
-      }
-    }
 
-    // -----------------------------------
-    // PULO
-    // -----------------------------------
-    if (
-      keys.up &&
-      this.onGround
-    ) {
+if (
+this.isAirKicking ||
+this.onGround
+) {
+return;
+}
 
-      this.velocityY = this.jumpForce;
 
-      this.onGround = false;
+this.isAirKicking = true;
+this.isKicking = true;      
 
-      this.isJumping = true;
 
-      // FUTURO:
-      // AudioManager.play('jump');
-    }
+this.attackAlreadyHit = false;
 
-    if (this.onGround) {
 
-      this.isJumping = false;
-    }
+this.attackDamage =
+this.airKickDamage;
 
-    // -----------------------------------
-    // DEFESA
-    // -----------------------------------
-    this.isDefending = keys.defend;
 
-    // -----------------------------------
-    // ATAQUES
-    // -----------------------------------
-    if (this.attackCooldown <= 0) {
+this.attackTimer = 16;
 
-      // SOCO
-      if (
-        keys.attack &&
-        this.onGround
-      ) {
 
-        this.startPunch();
-      }
+this.attackCooldown = 20;
 
-      // CHUTE
-      else if (
-        keys.kick &&
-        this.onGround
-      ) {
 
-        this.startKick();
-      }
-    }
-  }
+this.velocityY = 0.1;
 
-  // ===================================================
-  // SOCO
-  // ===================================================
-  startPunch() {
 
-    if (
-      this.isAttacking ||
-      this.isKicking ||
-      this.isAirKicking
-    ) {
-      return;
-    }
+this.velocityX =
+this.facingRight
+? 1.8
+: -1.8;
+}
 
-    this.isAttacking = true;
 
-    this.attackAlreadyHit = false;
+// ===================================================
+// DASH
+// ===================================================
+startDash(direction) {
 
-    this.attackTimer = 18;
 
-    this.attackCooldown = 42;
+this.isDashing = true;
 
-    // FUTURO
-    // AudioManager.play('punch');
-  }
 
-  // ===================================================
-  // CHUTE
-  // ===================================================
-  startKick() {
+this.dashDirection =
+direction;
 
-    if (
-      this.isAttacking ||
-      this.isKicking ||
-      this.isAirKicking
-    ) {
-      return;
-    }
 
-    this.isKicking = true;
+this.dashTimer = 7;
 
-    this.attackAlreadyHit = false;
 
-    this.attackTimer = 20;
+this.velocityX =
+this.dashSpeed *
+direction;
+}
 
-    this.attackCooldown = 55;
 
-    // FUTURO
-    // AudioManager.play('kick');
-  }
+// ===================================================
+// ESPECIAL
+// ===================================================
+startSpecial() {
 
-  // ===================================================
-  // CHUTE AÉREO
-  // ===================================================
-  startAirKick() {
 
-    if (
-      this.isAttacking ||
-      this.isKicking ||
-      this.isAirKicking
-    ) {
-      return;
-    }
+this.isSpecialAttacking = true;
 
-    this.isAirKicking = true;
 
-    this.attackAlreadyHit = false;
+this.attackAlreadyHit = false;
 
-    this.attackTimer = 22;
 
-    this.attackCooldown = 40;
+this.specialMeter = 0;
 
-    this.velocityY = 2;
 
-    // FUTURO
-    // AudioManager.play('airKick');
-  }
+// ===============================================
+// MAIS FORTE NOVAMENTE
+// ===============================================
+this.attackDamage = 16;
 
-  // ===================================================
-  // FÍSICA
-  // ===================================================
-  applyPhysics() {
 
-    this.velocityY += this.gravity;
+this.attackTimer = 42;
 
-    // Limites horizontais
-    if (this.velocityX > 5) {
-      this.velocityX = 5;
-    }
 
-    if (this.velocityX < -5) {
-      this.velocityX = -5;
-    }
+// ===============================================
+// AINDA TEM RECOVERY GRANDE
+// ===============================================
+this.attackCooldown = 72;
 
-    this.x += this.velocityX;
 
-    this.y += this.velocityY;
-  }
+this.velocityX =
+this.facingRight
+? 2
+: -2;
+}
 
-  // ===================================================
-  // TIMERS
-  // ===================================================
-  handleTimers() {
 
-    // Ataques
-    if (this.attackTimer > 0) {
+applyJokeDebuff() {
 
-      this.attackTimer--;
-    }
 
-    else {
+  this.isLaughing = true;
 
-      this.isAttacking = false;
 
-      this.isKicking = false;
+  this.laughTimer = 240;
 
-      this.isAirKicking = false;
 
-      this.attackAlreadyHit = false;
-    }
+  this.speedMultiplier = 0.30;
 
-    // Hurt
-    if (this.hurtTimer > 0) {
 
-      this.hurtTimer--;
-    }
+  this.defenseMultiplier = 0.80;
 
-    else {
 
-      this.isHurt = false;
-    }
+  console.log(
+    "PLAYER COMECOU A RIR"
+  );
+}
 
-    // Invulnerabilidade
-    if (
-      this.invulnerabilityTimer > 0
-    ) {
 
-      this.invulnerabilityTimer--;
-    }
+// ===================================================
+// FÍSICA
+// ===================================================
+applyPhysics() {
 
-    // Cooldown
-    if (this.attackCooldown > 0) {
 
-      this.attackCooldown--;
-    }
-  }
+this.velocityY += this.gravity;
 
-  // ===================================================
-  // ANIMAÇÃO
-  // ===================================================
-  updateAnimation() {
 
-    // PRIORIDADE
-    if (this.isDead) {
+if (
+this.velocityX > this.maxSpeed &&
+!this.isDashing
+) {
 
-      this.setAnimation('death');
-    }
 
-    else if (this.isHurt) {
+this.velocityX =
+this.maxSpeed;
+}
 
-      this.setAnimation('hurt');
-    }
 
-    else if (this.isKicking) {
+if (
+this.velocityX < -this.maxSpeed &&
+!this.isDashing
+) {
 
-      this.setAnimation('kick');
-    }
 
-    else if (this.isAttacking) {
+this.velocityX =
+-this.maxSpeed;
+}
 
-      this.setAnimation('punch');
-    }
 
-    else if (this.isDefending) {
+this.x += this.velocityX;
 
-      this.setAnimation('defend');
-    }
 
-    else if (!this.onGround) {
+if (this.isLaughing) {
 
-      this.setAnimation('jump');
-    }
 
-    else if (this.isMoving) {
+  this.x +=
+    Math.sin(
+      Date.now() * 0.03
+    ) * 0.6;
+}
 
-      this.setAnimation('walk');
-    }
 
-    else {
+this.y += this.velocityY;
+}
 
-      this.setAnimation('idle');
-    }
 
-    // Atualiza frames
-    const anim =
-      this.animations[this.currentAnimation];
+// ===================================================
+// TIMERS
+// ===================================================
+handleTimers() {
 
-    this.animationTimer++;
 
-    if (
-      this.animationTimer >= anim.speed
-    ) {
+if (this.attackTimer > 0) {
 
-      this.animationTimer = 0;
 
-      this.currentFrame++;
+this.attackTimer--;
 
-      // Loop
-      if (
-        this.currentFrame >= anim.frames
-      ) {
 
-        if (anim.loop) {
+if (
+this.comboQueued &&
+this.attackTimer <= 2 &&
+this.comboStep < 3
+) {
 
-          this.currentFrame = 0;
-        }
 
-        else {
+this.comboQueued = false;
 
-          this.currentFrame =
-            anim.frames - 1;
-        }
-      }
-    }
-  }
 
-  // ===================================================
-  // TROCAR ANIMAÇÃO
-  // ===================================================
-  setAnimation(name) {
+this.isAttacking = false;
 
-    if (
-      this.currentAnimation === name
-    ) {
-      return;
-    }
 
-    this.currentAnimation = name;
+this.startPunch();
+}
+}
 
-    this.currentFrame = 0;
 
-    this.animationTimer = 0;
-  }
+else {
 
-  // ===================================================
-  // TOMAR DANO
-  // ===================================================
-  takeDamage(amount) {
 
-    // Defesa reduz dano
-    if (this.isDefending) {
+this.isAttacking = false;
 
-      amount *= 0.5;
-    }
 
-    // Invulnerável
-    if (
-      this.invulnerabilityTimer > 0
-    ) {
-      return;
-    }
+this.isKicking = false;
+
+
+this.isAirKicking = false;
+
+
+this.isSpecialAttacking = false;
+
+
+this.attackAlreadyHit = false;
+
+
+this.comboArmor = false;
+
+
+if (this.isComboFinisher) {
+
+
+    this.comboStep = 0;
+    this.comboHitsConnected = 0;
+    this.finisherReady = false;
+}
+
+
+this.isComboFinisher = false;
+
+
+}
+
+
+if (this.hurtTimer > 0) {
+
+
+this.hurtTimer--;
+}
+
+
+else {
+
+
+this.isHurt = false;
+}
+
+
+if (
+this.invulnerabilityTimer > 0
+) {
+
+
+this.invulnerabilityTimer--;
+}
+
+
+if (
+this.easyAttackProtection > 0
+) {
+
+
+this.easyAttackProtection--;
+}
+
+
+if (this.easyAttackWindow > 0) {
+
+
+    this.easyAttackWindow--;
+}
+
+
+if (
+this.attackCooldown > 0
+) {
+
+
+this.attackCooldown--;
+}
+
+
+if (this.comboTimer > 0) {
+
+
+this.comboTimer--;
+
+
+}
+
+
+else {
+
+
+this.comboStep = 0;
+this.comboHitsConnected = 0;
+}
+
+
+if (this.comboDisplayTimer > 0) {
+
+
+    this.comboDisplayTimer--;
+
+
+} else {
+
+
+     this.comboComplete = false;
+}
+
+
+if (this.comboLockTimer > 0) {
+
+
+this.comboLockTimer--;
+}
+
+
+else {
+
+
+this.comboLocked = false;
+}
+
+
+if (this.dashTimer > 0) {
+
+
+this.dashTimer--;
+}
+
+
+else {
+
+
+this.isDashing = false;
+}
+
+
+
+
+if (this.attackBuffer > 0) {
+
+
+this.attackBuffer--;
+}
+
+
+if (this.laughTimer > 0) {
+
+
+  this.laughTimer--;
+
+
+} else if (this.isLaughing) {
+
+
+  this.isLaughing = false;
+
+
+  this.speedMultiplier = 1;
+
+
+  this.defenseMultiplier = 1;
+
+
+  console.log(
+    "PAROU DE RIR"
+  );
+}
+}
+
+
+// ===================================================
+// ENERGIA
+// ===================================================
+regenerateEnergy() {
+
+
+if (
+this.specialMeter <
+this.maxSpecialMeter
+) {
+
+
+this.specialMeter +=
+this.energyRegenRate;
+
+
+if (
+this.specialMeter >
+this.maxSpecialMeter
+) {
+
+
+this.specialMeter =
+this.maxSpecialMeter;
+}
+}
+
+
+this.energy =
+this.specialMeter;
+
+
+this.maxEnergy =
+this.maxSpecialMeter;
+}
+
+
+// ===================================================
+// DAMAGE
+// ===================================================
+takeDamage(amount, ignoreDefense = false) {
+
+  console.log(
+    "DANO RECEBIDO",
+    "protection:",
+    this.easyAttackProtection
+);
+
+
+if (
+    this.easyAttackProtection > 0
+){
+    console.log(
+        "DANO BLOQUEADO PELA ESQUIVA PERFEITA"
+    );
+    return;
+}
+
+if (
+    this.invulnerabilityTimer > 0
+){
+    return;
+}
+
+
+console.log(
+    "LEVOU DANO",
+    "comboStep:", this.comboStep,
+    "comboHitsConnected:", this.comboHitsConnected
+);
+
+
+if (
+    this.comboArmor
+) {
+
 
     this.hp -= amount;
 
-    this.isHurt = true;
 
-    this.hurtTimer =
-      this.hurtDuration;
+    this.specialMeter +=
+      this.damageEnergyGain;
 
-    this.invulnerabilityTimer =
-      this.invulnerabilityDuration;
 
-    // Knockback
-    this.velocityX =
-      this.facingRight
-        ? -3.5
-        : 3.5;
+    if (
+        this.specialMeter >
+        this.maxSpecialMeter
+    ) {
 
-    this.velocityY = -1.5;
 
-    // FUTURO:
-    // EffectsManager.spawnHit(...)
-    // EffectsManager.shakeScreen(...)
-    // AudioManager.play('hurt')
-
-    if (this.hp <= 0) {
-
-      this.hp = 0;
-
-      this.isDead = true;
-    }
-  }
-
-  // ===================================================
-  // CURA
-  // ===================================================
-  heal(amount) {
-
-    this.hp = Math.min(
-      this.hp + amount,
-      this.maxHp
-    );
-  }
-
-    // ===================================================
-    // DRAW
-    // ===================================================
-    draw(ctx) {
-
-      // Invulnerabilidade piscando
-      if (
-        this.invulnerabilityTimer > 0 &&
-        Math.floor(
-          this.invulnerabilityTimer / 4
-        ) % 2 === 0
-      ) {
-        return;
-      }
-
-      ctx.save();
-
-      // Espelha sprite
-      if (!this.facingRight) {
-
-        ctx.scale(-1, 1);
-
-        ctx.translate(
-          -this.x * 2 - this.width,
-          0
-        );
-      }
-
-      // ===================================================
-      // VARIÁVEIS DE ANIMAÇÃO
-      // ===================================================
-
-      let offsetX = 0;
-      let offsetY = 0;
-
-      let bodyWidth = this.width;
-      let bodyHeight = this.height - 20;
-
-      let headY = this.y;
-
-      let armOffset = 0;
-      let legOffset = 0;
-
-      // ===================================================
-      // ANIMAÇÕES SIMPLES
-      // ===================================================
-
-      switch (this.currentAnimation) {
-
-        // -----------------------------------
-        // IDLE
-        // -----------------------------------
-        case 'idle':
-
-          offsetY =
-            Math.sin(this.animationTimer * 0.15) * 1.5;
-
-          break;
-
-        // -----------------------------------
-        // WALK
-        // -----------------------------------
-        case 'walk':
-
-          legOffset =
-            Math.sin(this.currentFrame) * 4;
-
-          armOffset =
-            Math.cos(this.currentFrame) * 4;
-
-          break;
-
-        // -----------------------------------
-        // JUMP
-        // -----------------------------------
-        case 'jump':
-
-          bodyHeight -= 8;
-
-          offsetY = -4;
-
-          break;
-
-        // -----------------------------------
-        // PUNCH
-        // -----------------------------------
-        case 'punch':
-
-          armOffset = 14;
-
-          bodyWidth += 4;
-
-          break;
-
-        // -----------------------------------
-        // KICK
-        // -----------------------------------
-        case 'kick':
-
-          legOffset = 18;
-
-          bodyWidth += 6;
-
-          break;
-
-        // -----------------------------------
-        // AIR KICK
-        // -----------------------------------
-        case 'airKick':
-
-          // Inclina corpo levemente
-          offsetY = -4;
-
-          bodyWidth += 10;
-
-          bodyHeight -= 6;
-
-          // Estica muito a perna
-          legOffset = 28;
-
-          // Avança o corpo
-          offsetX += this.facingRight ? 6 : -6;
-
-          break;
-
-        // -----------------------------------
-        // DEFEND
-        // -----------------------------------
-        case 'defend':
-
-          bodyWidth -= 6;
-
-          offsetX += 4;
-
-          break;
-
-        // -----------------------------------
-        // HURT
-        // -----------------------------------
-        case 'hurt':
-
-          offsetX =
-            Math.sin(this.animationTimer * 2) * 3;
-
-          break;
-
-        // -----------------------------------
-        // DEATH
-        // -----------------------------------
-        case 'death':
-
-          bodyHeight = 20;
-
-          offsetY = 42;
-
-          break;
-      }
-
-      // ===================================================
-      // CORES
-      // ===================================================
-
-      let bodyColor =
-        this.gender === 'masculino'
-          ? '#3A6BAC'
-          : '#AC3A6B';
-
-      if (this.isDefending) {
-        bodyColor = '#5AA';
-      }
-
-      if (
-        this.isAttacking ||
-        this.isKicking ||
-        this.isAirKicking
-      ) {
-        bodyColor = '#F80';
-      }
-
-      if (this.isHurt) {
-        bodyColor = '#F44';
-      }
-
-      // ===================================================
-      // CORPO
-      // ===================================================
-
-      ctx.fillStyle = bodyColor;
-
-      ctx.fillRect(
-        this.x + offsetX,
-        this.y + 20 + offsetY,
-        bodyWidth,
-        bodyHeight
-      );
-
-      // ===================================================
-      // CABEÇA
-      // ===================================================
-
-      ctx.fillStyle = '#F5C5A0';
-
-      ctx.fillRect(
-        this.x + 10 + offsetX,
-        headY + offsetY,
-        this.width - 20,
-        22
-      );
-
-      // ===================================================
-      // CABELO
-      // ===================================================
-
-      ctx.fillStyle = '#222';
-
-      ctx.fillRect(
-        this.x + 8 + offsetX,
-        headY + offsetY,
-        this.width - 16,
-        10
-      );
-
-      // ===================================================
-      // BRAÇOS
-      // ===================================================
-
-      ctx.fillStyle = '#F5C5A0';
-
-      // Braço esquerdo
-      ctx.fillRect(
-        this.x - 6 + offsetX,
-        this.y + 28 + offsetY,
-        8,
-        20
-      );
-
-      // Braço direito
-      ctx.fillRect(
-        this.x + this.width - 2 + armOffset + offsetX,
-        this.y + 28 + offsetY,
-        8,
-        20
-      );
-
-      // ===================================================
-      // PERNAS
-      // ===================================================
-
-      ctx.fillStyle = '#111';
-
-      // Perna esquerda
-      ctx.fillRect(
-        this.x + 10 + offsetX,
-        this.y + this.height - 4 + offsetY,
-        10,
-        18
-      );
-
-      // Perna direita
-      ctx.fillRect(
-        this.x + 28 + legOffset + offsetX,
-        this.y + this.height - 4 + offsetY,
-        10,
-        18
-      );
-
-      ctx.restore();
+        this.specialMeter =
+        this.maxSpecialMeter;
     }
 
-  // ===================================================
-  // RESET
-  // ===================================================
-  reset(x, y) {
 
-    this.x = x;
-
-    this.y = y;
-
-    this.velocityX = 0;
-
-    this.velocityY = 0;
-
-    this.hp = this.maxHp;
-
-    this.isDead = false;
-
-    this.isHurt = false;
-
-    this.isMoving = false;
-
-    this.isJumping = false;
-
-    this.isDefending = false;
-
-    this.isAttacking = false;
-
-    this.isKicking = false;
-
-    this.isAirKicking = false;
-
-    this.attackAlreadyHit = false;
-
-    this.attackTimer = 0;
-
-    this.attackCooldown = 0;
-
-    this.hurtTimer = 0;
-
-    this.invulnerabilityTimer = 0;
-
-    // Reset animação
-    this.currentAnimation = 'idle';
-
-    this.currentFrame = 0;
-
-    this.animationTimer = 0;
-  }
+    return;
 }
+
+
+
+
+if (
+    this.isDefending &&
+    !ignoreDefense
+) {
+
+    amount *=
+    0.38 /
+    this.defenseMultiplier;
+
+    amount = Math.round(amount);
+}
+
+
+this.hp -= amount;
+
+
+//this.comboHits = 0;
+
+
+this.isHurt = true;
+
+
+this.hurtTimer =
+this.hurtDuration;
+
+
+this.invulnerabilityTimer =
+this.invulnerabilityDuration;
+
+
+//this.comboQueued = false;
+
+
+//this.comboLocked = false;
+
+
+const knockbackX =
+  this.facingRight
+    ? -this.knockbackForce
+    : this.knockbackForce;
+
+
+this.velocityX = knockbackX;
+
+
+if (amount >= 10) {
+
+
+  this.velocityX *= 1.5;
+}
+
+
+this.specialMeter +=
+this.damageEnergyGain;
+
+
+if (
+this.specialMeter >
+this.maxSpecialMeter
+) {
+
+
+this.specialMeter =
+this.maxSpecialMeter;
+}
+
+
+if (this.hp <= 0) {
+
+
+this.hp = 0;
+
+
+this.isDead = true;
+}
+}
+
+
+// ===================================================
+// HITSTOP
+// ===================================================
+applyHitstop(frames = 2) {
+
+
+this.hitstop = frames;
+}
+
+
+// ===================================================
+// CURA
+// ===================================================
+heal(amount) {
+
+
+this.hp = Math.min(
+this.hp + amount,
+this.maxHp
+);
+}
+
+
+// ===================================================
+// RESET
+// ===================================================
+reset(x, y) {
+
+
+this.x = x;
+this.y = y;
+
+
+this.velocityX = 0;
+this.velocityY = 0;
+
+
+this.hp = this.maxHp;
+
+
+this.specialMeter = 0;
+
+
+this.comboStep = 0;
+this.comboTimer = 0;
+
+
+this.comboHits = 0;
+
+
+this.isDead = false;
+this.isHurt = false;
+
+
+this.isMoving = false;
+this.isJumping = false;
+
+
+this.isDefending = false;
+
+
+this.isAttacking = false;
+this.isKicking = false;
+this.isAirKicking = false;
+
+
+this.isSpecialAttacking = false;
+
+
+this.isDashing = false;
+
+
+this.attackAlreadyHit = false;
+
+
+this.attackTimer = 0;
+this.attackCooldown = 0;
+
+
+this.hurtTimer = 0;
+
+
+this.invulnerabilityTimer = 0;
+
+
+this.hitstop = 0;
+
+
+this.comboLocked = false;
+this.comboLockTimer = 0;
+
+
+this.canRecover = false;
+
+
+}
+}
+

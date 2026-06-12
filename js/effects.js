@@ -1,412 +1,451 @@
 // ===================================================
-// UNICEFIGHT - Sistema de Efeitos
-// Arquivo: js/effects.js
+// UNICEFIGHT - EFFECTS SYSTEM BALANCED V6
+// VISUAL FX BALANCE PATCH
 // ===================================================
-// SISTEMA PREPARADO PARA:
-// ✔ Hit effects
-// ✔ Partículas
-// ✔ Screen shake global
-// ✔ Flash de dano
-// ✔ Efeitos de impacto
-// ✔ Poeira de movimento
-// ✔ Trails
-// ✔ Efeitos de vitória
-// ✔ Efeitos futuros
+// BALANCEAMENTO:
+// ✔ Menos poluição visual
+// ✔ Hit effects mais limpos
+// ✔ Dash trail reduzido
+// ✔ Knockdown menos exagerado
+// ✔ Shockwaves menores
+// ✔ Melhor performance
+// ✔ Visual mais consistente
+// ✔ Combate mais legível
+// ✔ Impactos ainda satisfatórios
 // ===================================================
 
-// ===================================================
-// GERENCIADOR GLOBAL
-// ===================================================
-const Effects = {
+const EffectsSystem = {
 
-  particles: [],
+  effects: [],
 
-  screenShake: 0,
+  // ===================================
+  // SPAWN BASE
+  // ===================================
+  spawn(effect) {
 
-  flashAlpha: 0,
+    this.effects.push(effect);
+  },
 
-  // ===============================================
-  // UPDATE GLOBAL
-  // ===============================================
+  // ===================================
+  // UPDATE
+  // ===================================
   update() {
 
-    // -------------------------------------------
-    // PARTICLES
-    // -------------------------------------------
-    for (let i = this.particles.length - 1; i >= 0; i--) {
+    for (
+      let i = this.effects.length - 1;
+      i >= 0;
+      i--
+    ) {
 
-      const p = this.particles[i];
+      const effect =
+        this.effects[i];
 
-      p.update();
+      effect.life--;
 
-      if (p.dead) {
+      effect.x += effect.vx || 0;
+      effect.y += effect.vy || 0;
 
-        this.particles.splice(i, 1);
+      if (effect.gravity) {
+
+        effect.vy += effect.gravity;
       }
-    }
 
-    // -------------------------------------------
-    // SCREEN SHAKE
-    // -------------------------------------------
-    if (this.screenShake > 0) {
+      if (
+        effect.friction !== undefined
+      ) {
 
-      this.screenShake--;
-    }
+        effect.vx *= effect.friction;
+        effect.vy *= effect.friction;
+      }
 
-    // -------------------------------------------
-    // FLASH
-    // -------------------------------------------
-    if (this.flashAlpha > 0) {
+      if (effect.scaleDecay) {
 
-      this.flashAlpha -= 0.02;
+        effect.size *=
+          effect.scaleDecay;
+      }
 
-      if (this.flashAlpha < 0) {
-        this.flashAlpha = 0;
+      if (
+        effect.life <= 0 ||
+        effect.size <= 0.04
+      ) {
+
+        this.effects.splice(i, 1);
       }
     }
   },
 
-  // ===============================================
-  // DRAW GLOBAL
-  // ===============================================
-  draw(ctx, canvasWidth, canvasHeight) {
+  // ===================================
+  // RENDER
+  // ===================================
+  render(ctx) {
 
-    // -------------------------------------------
-    // PARTICLES
-    // -------------------------------------------
-    for (const particle of this.particles) {
-
-      particle.draw(ctx);
-    }
-
-    // -------------------------------------------
-    // FLASH DE TELA
-    // -------------------------------------------
-    if (this.flashAlpha > 0) {
+    for (const effect of this.effects) {
 
       ctx.save();
 
-      ctx.fillStyle =
-        `rgba(255,255,255,${this.flashAlpha})`;
+      const alpha =
+        effect.life /
+        effect.maxLife;
 
-      ctx.fillRect(
-        0,
-        0,
-        canvasWidth,
-        canvasHeight
-      );
+      ctx.globalAlpha = alpha;
+
+      // ===============================
+      // SHOCKWAVE
+      // ===============================
+      if (
+        effect.type === 'shockwave'
+      ) {
+
+        ctx.strokeStyle =
+          effect.color;
+
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+
+        ctx.arc(
+          effect.x,
+          effect.y,
+          effect.size,
+          0,
+          Math.PI * 2
+        );
+
+        ctx.stroke();
+      }
+
+      // ===============================
+      // CIRCLE
+      // ===============================
+      else if (
+        effect.shape === 'circle'
+      ) {
+
+        ctx.fillStyle =
+          effect.color;
+
+        ctx.beginPath();
+
+        ctx.arc(
+          effect.x,
+          effect.y,
+          effect.size,
+          0,
+          Math.PI * 2
+        );
+
+        ctx.fill();
+      }
+
+      // ===============================
+      // DEFAULT RECT
+      // ===============================
+      else {
+
+        ctx.fillStyle =
+          effect.color;
+
+        ctx.fillRect(
+          effect.x,
+          effect.y,
+          effect.size,
+          effect.size
+        );
+      }
 
       ctx.restore();
     }
-  },
-
-  // ===============================================
-  // SHAKE
-  // ===============================================
-  triggerShake(power = 6) {
-
-    if (power > this.screenShake) {
-
-      this.screenShake = power;
-    }
-  },
-
-  // ===============================================
-  // FLASH
-  // ===============================================
-  triggerFlash(alpha = 0.2) {
-
-    this.flashAlpha = alpha;
-  },
-
-  // ===============================================
-  // HIT EFFECT
-  // ===============================================
-  createHitEffect(x, y, color = '#FFAA00') {
-
-    for (let i = 0; i < 8; i++) {
-
-      this.particles.push(
-
-        new Particle({
-
-          x,
-          y,
-
-          vx: (Math.random() - 0.5) * 5,
-
-          vy: (Math.random() - 0.5) * 5,
-
-          size: Math.random() * 5 + 3,
-
-          life: 18,
-
-          color
-        })
-      );
-    }
-  },
-
-  // ===============================================
-  // POEIRA
-  // ===============================================
-  createDust(x, y) {
-
-    for (let i = 0; i < 4; i++) {
-
-      this.particles.push(
-
-        new Particle({
-
-          x,
-          y,
-
-          vx: (Math.random() - 0.5) * 2,
-
-          vy: -Math.random() * 2,
-
-          size: Math.random() * 6 + 4,
-
-          life: 25,
-
-          color: '#AAAAAA',
-
-          gravity: -0.02
-        })
-      );
-    }
-  },
-
-  // ===============================================
-  // EFEITO DE PULO
-  // ===============================================
-  createJumpEffect(x, y) {
-
-    for (let i = 0; i < 6; i++) {
-
-      this.particles.push(
-
-        new Particle({
-
-          x,
-          y,
-
-          vx: (Math.random() - 0.5) * 4,
-
-          vy: -Math.random() * 3,
-
-          size: Math.random() * 5 + 2,
-
-          life: 20,
-
-          color: '#DDDDDD'
-        })
-      );
-    }
-  },
-
-  // ===============================================
-  // EFEITO DE DERROTA
-  // ===============================================
-  createExplosion(x, y) {
-
-    for (let i = 0; i < 25; i++) {
-
-      this.particles.push(
-
-        new Particle({
-
-          x,
-          y,
-
-          vx: (Math.random() - 0.5) * 8,
-
-          vy: (Math.random() - 0.5) * 8,
-
-          size: Math.random() * 8 + 4,
-
-          life: 35,
-
-          color:
-            Math.random() > 0.5
-            ? '#FF6600'
-            : '#FFFF00'
-        })
-      );
-    }
-
-    this.triggerShake(10);
-
-    this.triggerFlash(0.25);
   }
 };
 
 // ===================================================
-// CLASSE PARTICLE
+// HIT EFFECT
 // ===================================================
-class Particle {
+function spawnHitEffect(
+  x,
+  y,
+  heavy = false
+) {
 
-  constructor(config) {
+  // ===================================
+  // MENOS PARTÍCULAS
+  // ===================================
+  const particles =
+    heavy ? 10 : 5;
 
-    this.x = config.x;
-    this.y = config.y;
+  for (
+    let i = 0;
+    i < particles;
+    i++
+  ) {
 
-    this.vx = config.vx || 0;
-    this.vy = config.vy || 0;
+    const speed =
+      heavy ? 5 : 3;
 
-    this.size = config.size || 4;
+    EffectsSystem.spawn({
 
-    this.life = config.life || 20;
-    this.maxLife = this.life;
+      type: 'hit',
 
-    this.color = config.color || '#FFFFFF';
+      x,
+      y,
 
-    this.gravity = config.gravity ?? 0.08;
+      vx:
+        (Math.random() - 0.5) *
+        speed,
 
-    this.dead = false;
+      vy:
+        (Math.random() - 0.5) *
+        speed,
+
+      size:
+        heavy
+          ? 2 + Math.random() * 3
+          : 1 + Math.random() * 2,
+
+      color:
+        heavy
+          ? '#FFAA33'
+          : '#FFD966',
+
+      friction: 0.90,
+
+      life:
+        heavy ? 16 : 10,
+
+      maxLife:
+        heavy ? 16 : 10
+    });
   }
 
-  // ===============================================
-  // UPDATE
-  // ===============================================
-  update() {
+  // ===================================
+  // IMPACT RING
+  // ===================================
+  if (heavy) {
 
-    this.life--;
-
-    if (this.life <= 0) {
-
-      this.dead = true;
-
-      return;
-    }
-
-    this.vy += this.gravity;
-
-    this.x += this.vx;
-
-    this.y += this.vy;
-  }
-
-  // ===============================================
-  // DRAW
-  // ===============================================
-  draw(ctx) {
-
-    const alpha =
-      this.life / this.maxLife;
-
-    ctx.save();
-
-    ctx.globalAlpha = alpha;
-
-    ctx.fillStyle = this.color;
-
-    ctx.beginPath();
-
-    ctx.arc(
-      this.x,
-      this.y,
-      this.size,
-      0,
-      Math.PI * 2
+    spawnShockwave(
+      x,
+      y,
+      '#FFCC66',
+      5
     );
-
-    ctx.fill();
-
-    ctx.restore();
   }
 }
 
 // ===================================================
-// CAMERA SHAKE
+// LAND EFFECT
 // ===================================================
-function applyCameraShake(ctx) {
+function spawnLandEffect(
+  x,
+  y,
+  heavy = false
+) {
 
-  if (Effects.screenShake <= 0) {
-    return;
-  }
+  const particles =
+    heavy ? 8 : 4;
 
-  const intensity =
-    Effects.screenShake * 0.5;
+  for (
+    let i = 0;
+    i < particles;
+    i++
+  ) {
 
-  const offsetX =
-    (Math.random() - 0.5) * intensity;
+    EffectsSystem.spawn({
 
-  const offsetY =
-    (Math.random() - 0.5) * intensity;
+      type: 'dust',
 
-  ctx.translate(offsetX, offsetY);
-}
+      x,
+      y,
 
-// ===================================================
-// FUTURO SISTEMA DE TRAILS
-// ===================================================
-class TrailEffect {
+      vx:
+        (Math.random() - 0.5) *
+        (heavy ? 3 : 2),
 
-  constructor(entity) {
+      vy:
+        -Math.random() *
+        (heavy ? 1.8 : 1),
 
-    this.entity = entity;
+      size:
+        1 + Math.random() * 3,
 
-    this.points = [];
-  }
+      color: '#BBBBBB',
 
-  update() {
+      friction: 0.88,
 
-    /*
-    Futuro:
-    salvar posições antigas
-    para criar rastro
-    */
-  }
+      gravity: 0.04,
 
-  draw(ctx) {
+      life:
+        heavy ? 14 : 8,
 
-    /*
-    Futuro:
-    desenhar trail
-    */
-  }
-}
-
-// ===================================================
-// FUTURO SISTEMA DE AFTER IMAGE
-// ===================================================
-class AfterImageEffect {
-
-  constructor(entity) {
-
-    this.entity = entity;
-  }
-
-  update() {
-
-  }
-
-  draw(ctx) {
-
+      maxLife:
+        heavy ? 14 : 8
+    });
   }
 }
 
 // ===================================================
-// FUTURO SISTEMA DE IMPACTO
+// DASH EFFECT
 // ===================================================
-class ImpactRing {
+function spawnDashEffect(
+  entity
+) {
 
-  constructor(x, y) {
+  // ===================================
+  // TRAIL MAIS SUAVE
+  // ===================================
+  EffectsSystem.spawn({
 
-    this.x = x;
-    this.y = y;
+    type: 'dash',
 
-    this.radius = 10;
+    x:
+      entity.x +
+      entity.width / 2,
 
-    this.life = 20;
-  }
+    y:
+      entity.y +
+      entity.height * 0.72,
 
-  update() {
+    vx:
+      entity.facingRight
+        ? -0.2
+        : 0.2,
 
-  }
+    vy: 0,
 
-  draw(ctx) {
+    size: 6,
 
-  }
+    color: '#FFFFFF',
+
+    friction: 0.95,
+
+    scaleDecay: 0.88,
+
+    life: 6,
+
+    maxLife: 6,
+
+    shape: 'circle'
+  });
 }
+
+// ===================================================
+// LAUNCH EFFECT
+// ===================================================
+function spawnLaunchEffect(
+  x,
+  y
+) {
+
+  for (let i = 0; i < 7; i++) {
+
+    EffectsSystem.spawn({
+
+      type: 'launch',
+
+      x,
+      y,
+
+      vx:
+        (Math.random() - 0.5) * 3,
+
+      vy:
+        -Math.random() * 3,
+
+      size:
+        1 + Math.random() * 2,
+
+      color: '#FFF0AA',
+
+      friction: 0.92,
+
+      gravity: 0.06,
+
+      life: 12,
+
+      maxLife: 12
+    });
+  }
+
+  spawnShockwave(
+    x,
+    y,
+    '#FFFFFF',
+    4
+  );
+}
+
+// ===================================================
+// SHOCKWAVE
+// ===================================================
+function spawnShockwave(
+  x,
+  y,
+  color = '#FFFFFF',
+  size = 5
+) {
+
+  EffectsSystem.spawn({
+
+    type: 'shockwave',
+
+    x,
+    y,
+
+    vx: 0,
+    vy: 0,
+
+    size,
+
+    color,
+
+    scaleDecay: 1.08,
+
+    life: 8,
+
+    maxLife: 8
+  });
+}
+
+// ===================================================
+// KNOCKDOWN EFFECT
+// ===================================================
+function spawnKnockdownEffect(
+  x,
+  y
+) {
+
+  spawnLandEffect(
+    x,
+    y,
+    true
+  );
+
+  spawnShockwave(
+    x,
+    y,
+    '#DDDDDD',
+    7
+  );
+}
+
+// ===================================================
+// LEGACY COMPAT
+// ===================================================
+function updateEffects() {
+
+  EffectsSystem.update();
+}
+
+function renderEffects(ctx) {
+
+  EffectsSystem.render(ctx);
+}
+
+// ===================================================
+// EXPORT
+// ===================================================
+window.EffectsSystem =
+  EffectsSystem;
+
+console.log(
+  '[effects] balanced visual effects carregado'
+);

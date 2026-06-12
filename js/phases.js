@@ -1,94 +1,170 @@
 // ===================================================
-// UNICEFIGHT - Sistema de Fases
-// Arquivo: js/phases.js
-// PREPARADO PARA FASE 5
+// UNICEFIGHT - PHASE SYSTEM FINAL V2
+// ARCADE COMBAT READY
 // ===================================================
-// PREPARAÇÃO REALIZADA:
-// ✔ Múltiplas fases
-// ✔ Múltiplos backgrounds
-// ✔ Música por fase
-// ✔ Efeitos climáticos
-// ✔ Eventos de fase
-// ✔ Spawn de inimigos
-// ✔ Itens futuros
-// ✔ Sistema de checkpoint
-// ✔ Sistema de waves
-// ✔ Sistema de cutscene
-// ✔ Estrutura para animações
+// MELHORIAS:
+// ✔ Integração total com combat system
+// ✔ Compatível com launch / knockdown
+// ✔ Boss update otimizado
+// ✔ Removido double damage bug
+// ✔ LF2 pacing
+// ✔ Background refinado
+// ✔ Timer estabilizado
+// ✔ Spawn alinhado
+// ✔ Performance cleanup
+// ✔ Compatível com future waves
+// ✔ Compatível com effects system
 // ===================================================
 
-// -----------------------------------------------
+// ===================================================
 // DADOS DAS FASES
-// -----------------------------------------------
+// ===================================================
 const PHASE_DATA = [
 
-  // =============================================
   // FASE 1
-  // =============================================
   {
     id: 1,
-
     name: '1º Semestre',
-
     subtitle: 'Professor Pedro',
-
     bgColor: '#4A6080',
-
     groundColor: '#808080',
 
-    // =========================================
-    // BOSS
-    // =========================================
     hasBoss: true,
-
     bossName: 'pedro',
 
-    // =========================================
-    // TIMER
-    // =========================================
-    timeLimit: 90,
+    timeLimit: 99,
 
-    // =========================================
-    // ÁUDIO FUTURO
-    // =========================================
     music: 'fase1_theme',
-
     bossMusic: 'boss_pedro',
 
-    // =========================================
-    // EFEITOS FUTUROS
-    // =========================================
     weather: null,
-
     ambientEffects: true,
 
-    // =========================================
-    // CENÁRIO
-    // =========================================
-    backgroundType: 'campus',
+    backgroundType: 'entrada',
 
-    // =========================================
-    // EVENTOS FUTUROS
-    // =========================================
     cutsceneIntro: false,
-
     cutsceneEnding: false,
 
-    // =========================================
-    // WAVES FUTURAS
-    // =========================================
     enemyWaves: [],
+    itemSpawns: []
+  },
 
-    // =========================================
-    // ITENS FUTUROS
-    // =========================================
+  // FASE 2
+  {
+    id: 2,
+    name: '2º Semestre',
+    subtitle: 'Professor 2',
+    bgColor: '#5A6B85',
+    groundColor: '#707070',
+
+    hasBoss: true,
+    bossName: 'boss2',
+
+    timeLimit: 99,
+
+    music: 'fase2_theme',
+    bossMusic: 'boss2_theme',
+
+    weather: null,
+    ambientEffects: true,
+
+    backgroundType: 'biblioteca',
+
+    cutsceneIntro: false,
+    cutsceneEnding: false,
+
+    enemyWaves: [],
+    itemSpawns: []
+  },
+
+  // FASE 3
+  {
+    id: 3,
+    name: '3º Semestre',
+    subtitle: 'Professor 3',
+    bgColor: '#587050',
+    groundColor: '#666666',
+
+    hasBoss: true,
+    bossName: 'boss3',
+
+    timeLimit: 99,
+
+    music: 'fase3_theme',
+    bossMusic: 'boss3_theme',
+
+    weather: null,
+    ambientEffects: true,
+
+    backgroundType: 'blocoC',
+
+    cutsceneIntro: false,
+    cutsceneEnding: false,
+
+    enemyWaves: [],
+    itemSpawns: []
+  },
+
+  // FASE 4
+  {
+    id: 4,
+    name: '4º Semestre',
+    subtitle: 'Professor 4',
+    bgColor: '#705050',
+    groundColor: '#666666',
+
+    hasBoss: true,
+    bossName: 'boss4',
+
+    timeLimit: 99,
+
+    music: 'fase4_theme',
+    bossMusic: 'boss4_theme',
+
+    weather: null,
+    ambientEffects: true,
+
+    backgroundType: 'curral',
+
+    cutsceneIntro: false,
+    cutsceneEnding: false,
+
+    enemyWaves: [],
+    itemSpawns: []
+  },
+
+  // FASE 5
+  {
+    id: 5,
+    name: 'Formatura',
+    subtitle: 'Diretor',
+    bgColor: '#353550',
+    groundColor: '#606060',
+
+    hasBoss: true,
+    bossName: 'boss5',
+
+    timeLimit: 99,
+
+    music: 'fase5_theme',
+    bossMusic: 'boss5_theme',
+
+    weather: null,
+    ambientEffects: true,
+
+    backgroundType: 'auditorio',
+
+    cutsceneIntro: false,
+    cutsceneEnding: false,
+
+    enemyWaves: [],
     itemSpawns: []
   }
 ];
 
-// -----------------------------------------------
-// CLASSE DA FASE
-// -----------------------------------------------
+// ===================================================
+// PHASE CLASS
+// ===================================================
 class Phase {
 
   constructor(
@@ -98,27 +174,42 @@ class Phase {
   ) {
 
     // =========================================
-    // DADOS
+    // SAFETY
+    // =========================================
+    if (
+      !PHASE_DATA[phaseIndex]
+    ) {
+
+      phaseIndex = 0;
+    }
+
+    // =========================================
+    // DATA
     // =========================================
     this.index = phaseIndex;
 
-    this.data = PHASE_DATA[phaseIndex];
+    this.data =
+      PHASE_DATA[phaseIndex];
 
-    this.canvasWidth = canvasWidth;
+    this.canvasWidth =
+      canvasWidth;
 
-    this.canvasHeight = canvasHeight;
+    this.canvasHeight =
+      canvasHeight;
 
     // =========================================
     // TIMER
     // =========================================
-    this.timeLimit = this.data.timeLimit;
+    this.timeLimit =
+      this.data.timeLimit;
 
-    this.timeLeft = this.timeLimit;
+    this.timeLeft =
+      this.timeLimit;
 
     this.frameCounter = 0;
 
     // =========================================
-    // ESTADO
+    // STATES
     // =========================================
     this.isComplete = false;
 
@@ -133,114 +224,106 @@ class Phase {
 
     // =========================================
     // PLAYER SPAWN
-    // FUTURO CHECKPOINT
     // =========================================
     this.playerSpawn = {
 
       x: 80,
 
-      y: canvasHeight - 160
+      y:
+        canvasHeight - 160
     };
 
     // =========================================
-    // CHECKPOINT FUTURO
+    // FUTURE SYSTEMS
     // =========================================
     this.checkpoints = [];
 
-    // =========================================
-    // INIMIGOS FUTUROS
-    // =========================================
     this.enemies = [];
 
-    // =========================================
-    // WAVES FUTURAS
-    // =========================================
     this.currentWave = 0;
 
     this.waveStarted = false;
 
-    // =========================================
-    // ITENS FUTUROS
-    // =========================================
     this.items = [];
 
-    // =========================================
-    // EFEITOS FUTUROS
-    // =========================================
     this.effects = [];
 
-    // =========================================
-    // EVENTOS FUTUROS
-    // =========================================
     this.events = [];
 
     // =========================================
-    // CUTSCENES FUTURAS
+    // CUTSCENE
     // =========================================
-    this.isCutscenePlaying = false;
+    this.isCutscenePlaying =
+      false;
+
+    // =========================================
+    // PLATFORMS
+    // =========================================
+    this.platforms =
+      this.createPlatforms();
 
     // =========================================
     // BOSS
     // =========================================
     this.boss = null;
 
-    if (this.data.hasBoss) {
+    if (
+      this.data.hasBoss
+    ) {
 
-      this.boss = new Boss(
-        phaseIndex,
-        canvasWidth,
-        canvasHeight
-      );
+      this.boss =
+        new Boss(
+          phaseIndex,
+          canvasWidth,
+          canvasHeight
+        );
+
+      // =====================================
+      // GROUND ALIGN
+      // =====================================
+      this.boss.y =
+        this.platforms[0].y -
+        this.boss.height;
+
+      this.boss.onGround = true;
 
       this.boss.isActive = true;
     }
 
     // =========================================
-    // PLATAFORMAS
-    // =========================================
-    this.platforms =
-      this.createPlatforms();
-
-    // =========================================
-    // BACKGROUND LAYERS
-    // FUTURO PARALLAX
+    // BACKGROUND
     // =========================================
     this.backgroundLayers =
       this.createBackgroundLayers();
 
     // =========================================
-    // INICIAR FASE
+    // START
     // =========================================
     this.startPhase();
   }
 
-  // -----------------------------------------------
-  // INICIAR FASE
-  // -----------------------------------------------
+  // ===================================================
+  // START
+  // ===================================================
   startPhase() {
 
-    // =========================================
-    // MÚSICA FUTURA
-    // =========================================
     /*
     AudioManager.playMusic(
       this.data.music
     );
     */
 
-    // =========================================
-    // CUTSCENE FUTURA
-    // =========================================
-    if (this.data.cutsceneIntro) {
+    if (
+      this.data.cutsceneIntro
+    ) {
 
       this.startIntroCutscene();
     }
   }
 
-  // -----------------------------------------------
+  // ===================================================
   // BACKGROUND LAYERS
-  // FUTURO PARALLAX
-  // -----------------------------------------------
+  // ===================================================
   createBackgroundLayers() {
 
     return [
@@ -262,54 +345,45 @@ class Phase {
     ];
   }
 
-  // -----------------------------------------------
-  // PLATAFORMAS
-  // -----------------------------------------------
+  // ===================================================
+  // PLATFORMS
+  // ===================================================
   createPlatforms() {
 
     const platforms = [];
 
     // =========================================
-    // CHÃO
+    // FLOOR
     // =========================================
     platforms.push({
 
       x: 0,
 
-      y: this.canvasHeight - 20,
+      y:
+        this.canvasHeight - 20,
 
-      width: this.canvasWidth,
+      width:
+        this.canvasWidth,
 
       height: 20,
 
-      color: this.data.groundColor
+      color:
+        this.data.groundColor
     });
-
-    // =========================================
-    // FUTURAS PLATAFORMAS
-    // =========================================
-    /*
-    platforms.push({
-      x: 300,
-      y: 300,
-      width: 200,
-      height: 20,
-      color: '#777'
-    });
-    */
 
     return platforms;
   }
 
-  // -----------------------------------------------
+  // ===================================================
   // UPDATE
-  // -----------------------------------------------
+  // ===================================================
   update(player) {
 
     if (
       this.isComplete ||
       this.isFailed
     ) {
+
       return;
     }
 
@@ -324,46 +398,51 @@ class Phase {
     this.updateBoss(player);
 
     // =========================================
-    // INIMIGOS FUTUROS
+    // FUTURE
     // =========================================
     this.updateEnemies(player);
 
-    // =========================================
-    // ITENS FUTUROS
-    // =========================================
     this.updateItems(player);
 
-    // =========================================
-    // EFEITOS FUTUROS
-    // =========================================
     this.updateEffects();
 
-    // =========================================
-    // EVENTOS FUTUROS
-    // =========================================
     this.updateEvents();
 
     // =========================================
-    // CHECA FIM DA FASE
+    // COMPLETE
     // =========================================
-    this.checkPhaseCompletion(player);
+    this.checkPhaseCompletion(
+      player
+    );
   }
 
-  // -----------------------------------------------
+  // ===================================================
   // TIMER
-  // -----------------------------------------------
+  // ===================================================
   updateTimer() {
+
+    if (
+      this.isPaused
+    ) {
+
+      return;
+    }
 
     this.frameCounter++;
 
-    if (this.frameCounter >= 60) {
+    if (
+      this.frameCounter >= 60
+    ) {
 
       this.frameCounter = 0;
 
-      if (this.timeLeft > 0) {
+      if (
+        this.timeLeft > 0
+      ) {
 
         this.timeLeft--;
       }
+
       else {
 
         this.isFailed = true;
@@ -371,15 +450,17 @@ class Phase {
     }
   }
 
-  // -----------------------------------------------
-  // UPDATE BOSS
-  // -----------------------------------------------
+  // ===================================================
+  // BOSS UPDATE
+  // ===================================================
   updateBoss(player) {
 
     if (
       !this.boss ||
-      !this.boss.isActive
+      !this.boss.isActive ||
+      this.boss.isDefeated
     ) {
+
       return;
     }
 
@@ -389,137 +470,99 @@ class Phase {
     this.boss.update(player);
 
     // =========================================
-    // BOSS ATACA PLAYER
+    // WALLS
     // =========================================
-    if (
-      this.boss.isHittingPlayer(player)
-    ) {
+    checkWallCollision(
 
-      player.takeDamage(
-        this.boss.currentDamage
-      );
-    }
+      this.boss,
+
+      this.canvasWidth
+    );
 
     // =========================================
-    // PLAYER ATACA BOSS
+    // PLATFORMS
     // =========================================
-    if (
-      checkAttackCollision(
-        player,
-        this.boss
-      )
-    ) {
+    checkPlatformCollision(
 
-      // Evita múltiplos hits
-      if (!player.attackAlreadyHit) {
+      this.boss,
 
-        let damage = 0;
-
-        // -----------------------------
-        // SOCO
-        // -----------------------------
-        if (player.isAttacking) {
-
-          damage =
-            player.attackDamage;
-        }
-
-        // -----------------------------
-        // CHUTE
-        // -----------------------------
-        if (
-          player.isKicking &&
-          player.onGround
-        ) {
-
-          damage =
-            player.kickDamage;
-        }
-
-        // -----------------------------
-        // CHUTE AÉREO
-        // -----------------------------
-        if (
-          player.isKicking &&
-          !player.onGround
-        ) {
-
-          damage = 10;
-        }
-
-        this.boss.takeDamage(
-          damage
-        );
-
-        player.attackAlreadyHit =
-          true;
-      }
-    }
+      this.platforms
+    );
   }
 
-  // -----------------------------------------------
-  // UPDATE ENEMIES
-  // FUTURO
-  // -----------------------------------------------
+  // ===================================================
+  // FUTURE ENEMIES
+  // ===================================================
   updateEnemies(player) {
 
-    for (const enemy of this.enemies) {
+for (let i = this.enemies.length - 1; i >= 0; i--) {
 
-      enemy.update(player);
+    const enemy = this.enemies[i];
+
+    enemy.update(player);
+
+    if (enemy.isDead) {
+
+        this.enemies.splice(i, 1);
+
     }
+
+}
   }
 
-  // -----------------------------------------------
-  // UPDATE ITEMS
-  // FUTURO
-  // -----------------------------------------------
+  // ===================================================
+  // FUTURE ITEMS
+  // ===================================================
   updateItems(player) {
 
-    // futuro
+    // FUTURE
   }
 
-  // -----------------------------------------------
-  // UPDATE EFFECTS
-  // FUTURO
-  // -----------------------------------------------
+  // ===================================================
+  // FUTURE EFFECTS
+  // ===================================================
   updateEffects() {
 
-    // futuro
+    // FUTURE
   }
 
-  // -----------------------------------------------
-  // UPDATE EVENTS
-  // FUTURO
-  // -----------------------------------------------
+  // ===================================================
+  // FUTURE EVENTS
+  // ===================================================
   updateEvents() {
 
-    // futuro
+    // FUTURE
   }
 
-  // -----------------------------------------------
-  // FIM DA FASE
-  // -----------------------------------------------
+  // ===================================================
+  // COMPLETE
+  // ===================================================
   checkPhaseCompletion(player) {
 
-    // =========================================
-    // BOSS DERROTADO
-    // =========================================
     if (
-        this.boss &&
-        this.boss.isDefeated
-      ) {
+      this.boss &&
+      this.boss.isDefeated &&
+      !this.isComplete
+    ) {
 
-        this.score =
-          500 +
-          (this.timeLeft * 5);
+      this.isComplete = true;
 
-        player.score = this.score;
-      }
+      this.score =
+
+        500 +
+
+        (this.timeLeft * 5) +
+
+        (player.comboHits * 10);
+
+      player.score =
+        this.score;
     }
+  }
 
-  // -----------------------------------------------
+  // ===================================================
   // DRAW
-  // -----------------------------------------------
+  // ===================================================
   draw(ctx) {
 
     this.drawBackground(ctx);
@@ -527,114 +570,206 @@ class Phase {
     this.drawPlatforms(ctx);
 
     // =========================================
-    // INIMIGOS FUTUROS
+    // FUTURE ENEMIES
     // =========================================
     this.drawEnemies(ctx);
 
     // =========================================
-    // ITENS FUTUROS
+    // FUTURE ITEMS
     // =========================================
     this.drawItems(ctx);
 
     // =========================================
-    // BOSS
-    // =========================================
-    if (this.boss) {
-
-      this.boss.draw(ctx);
-    }
-
-    // =========================================
-    // EFEITOS FUTUROS
+    // FUTURE EFFECTS
     // =========================================
     this.drawEffects(ctx);
   }
 
-  // -----------------------------------------------
+  // ===================================================
   // BACKGROUND
-  // -----------------------------------------------
+  // ===================================================
   drawBackground(ctx) {
 
+if (
+    this.data.backgroundType ===
+    "biblioteca"
+){
+
+    this.drawBibliotecaBackground(
+        ctx
+    );
+
+    return;
+}
+
+if (
+    this.data.backgroundType ===
+    "blocoC"
+){
+
+    this.drawBlocoCBackground(
+        ctx
+    );
+
+    return;
+}
+
+    if (
+    this.data.backgroundType === "curral"
+){
+
+    this.drawCurralBackground(
+        ctx
+    );
+
+    return;
+}
+
+if (
+    this.data.backgroundType === "auditorio"
+){
+
+    this.drawAuditorioBackground(
+        ctx
+    );
+
+    return;
+}
+
     // =========================================
-    // FUNDO
+    // SKY
     // =========================================
+    const skyGradient =
+
+      ctx.createLinearGradient(
+        0,
+        0,
+        0,
+        this.canvasHeight
+      );
+
+    skyGradient.addColorStop(
+      0,
+      '#708FC0'
+    );
+
+    skyGradient.addColorStop(
+      1,
+      this.data.bgColor
+    );
+
     ctx.fillStyle =
-      this.data.bgColor;
+      skyGradient;
 
     ctx.fillRect(
+
       0,
       0,
+
       this.canvasWidth,
       this.canvasHeight
     );
 
     // =========================================
-    // CHÃO
+    // GROUND
     // =========================================
-    const groundGrad =
+    const groundGradient =
+
       ctx.createLinearGradient(
         0,
-        this.canvasHeight - 80,
+        this.canvasHeight - 90,
         0,
         this.canvasHeight
       );
 
-    groundGrad.addColorStop(
+    groundGradient.addColorStop(
       0,
       this.data.groundColor
     );
 
-    groundGrad.addColorStop(
+    groundGradient.addColorStop(
       1,
-      '#333'
+      '#2B2B2B'
     );
 
-    ctx.fillStyle = groundGrad;
+    ctx.fillStyle =
+      groundGradient;
 
     ctx.fillRect(
+
       0,
-      this.canvasHeight - 80,
+
+      this.canvasHeight - 90,
+
       this.canvasWidth,
-      80
+
+      90
     );
 
     // =========================================
-    // BACKGROUND DINÂMICO
-    // FUTURO
+    // TYPE
     // =========================================
-    switch (
-      this.data.backgroundType
-    ) {
+switch (
+  this.data.backgroundType
+) {
 
-      case 'campus':
+  case 'campus':
 
-        this.drawCampusBackground(
-          ctx
-        );
+    this.drawCampusBackground(ctx);
+    break;
 
-        break;
-    }
+  case "entrada":
+
+    this.drawEntradaBackground(ctx);
+    return;
+
+case "laboratorio":
+
+    this.drawLaboratorioBackground(ctx);
+    return;
+
+case "blocoC":
+
+    this.drawBlocoCBackground(ctx);
+    return;
+
+case "curral":
+
+    this.drawCurralBackground(ctx);
+    return;
+
+case "auditorio":
+
+    this.drawAuditorioBackground(ctx);
+    return;
+}
   }
 
-  // -----------------------------------------------
+  // ===================================================
   // CAMPUS
-  // -----------------------------------------------
+  // ===================================================
   drawCampusBackground(ctx) {
 
-    // Prédio
-
-    ctx.fillStyle = '#2E3B55';
+    // =========================================
+    // BUILDING
+    // =========================================
+    ctx.fillStyle =
+      '#2E3B55';
 
     ctx.fillRect(
+
       500,
       120,
+
       220,
       220
     );
 
-    // Janelas
-
-    ctx.fillStyle = '#AABBDD';
+    // =========================================
+    // WINDOWS
+    // =========================================
+    ctx.fillStyle =
+      '#B7D4FF';
 
     for (
       let y = 150;
@@ -657,72 +792,208 @@ class Phase {
       }
     }
 
-    // Texto
+    // =========================================
+    // BUILDING SHADOW
+    // =========================================
+    ctx.fillStyle =
+      'rgba(0,0,0,0.2)';
 
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(
 
-    ctx.font = '20px Arial';
+      720,
+      120,
+
+      16,
+      220
+    );
+
+    // =========================================
+    // TEXT
+    // =========================================
+    ctx.fillStyle =
+      '#FFFFFF';
+
+    ctx.font =
+      'bold 20px Arial';
 
     ctx.fillText(
+
       'UNICEPLAC',
-      560,
-      110
+
+      555,
+
+      108
     );
   }
 
-  // -----------------------------------------------
-  // PLATAFORMAS
-  // -----------------------------------------------
+  drawEntradaBackground(ctx){
+
+    const img =
+    sprites.get("entrada");
+
+    if(img){
+
+        ctx.drawImage(
+            img,
+            0,
+            0,
+            this.canvasWidth,
+            this.canvasHeight
+        );
+
+        return;
+    }
+
+    this.drawCampusBackground(ctx);
+
+}
+
+drawBibliotecaBackground(ctx){
+
+    const img =
+    sprites.get(
+        "biblioteca"
+    );
+
+    if(!img){
+        return;
+    }
+
+    ctx.drawImage(
+        img,
+        0,
+        0,
+        this.canvasWidth,
+        this.canvasHeight
+    );
+
+}
+
+drawBlocoCBackground(ctx){
+
+    const img =
+    sprites.get(
+        "blocoC"
+    );
+
+    if(!img){
+        return;
+    }
+
+    ctx.drawImage(
+        img,
+        0,
+        0,
+        this.canvasWidth,
+        this.canvasHeight
+    );
+
+}
+
+  drawCurralBackground(ctx){
+
+    const img =
+    sprites.get("curral");
+
+    if(!img){
+        return;
+    }
+
+    ctx.drawImage(
+        img,
+        0,
+        0,
+        this.canvasWidth,
+        this.canvasHeight
+    );
+
+}
+
+drawAuditorioBackground(ctx){
+
+    const img =
+    sprites.get("auditorio");
+
+    if(!img){
+        return;
+    }
+
+    ctx.drawImage(
+        img,
+        0,
+        0,
+        this.canvasWidth,
+        this.canvasHeight
+    );
+
+}
+
+  // ===================================================
+  // PLATFORMS
+  // ===================================================
   drawPlatforms(ctx) {
 
     for (const plat of this.platforms) {
 
-      ctx.fillStyle = plat.color;
+      ctx.fillStyle =
+        plat.color;
 
       ctx.fillRect(
+
         plat.x,
         plat.y,
+
         plat.width,
         plat.height
       );
     }
   }
 
-  // -----------------------------------------------
-  // DRAW ENEMIES
-  // FUTURO
-  // -----------------------------------------------
+  // ===================================================
+  // FUTURE ENEMIES
+  // ===================================================
   drawEnemies(ctx) {
 
     for (const enemy of this.enemies) {
 
-      enemy.draw(ctx);
+      if (enemy.draw) {
+
+        enemy.draw(ctx);
+      }
     }
   }
 
-  // -----------------------------------------------
-  // DRAW ITEMS
-  // FUTURO
-  // -----------------------------------------------
+  // ===================================================
+  // FUTURE ITEMS
+  // ===================================================
   drawItems(ctx) {
 
-    // futuro
+    // FUTURE
   }
 
-  // -----------------------------------------------
-  // DRAW EFFECTS
-  // FUTURO
-  // -----------------------------------------------
+  // ===================================================
+  // FUTURE EFFECTS
+  // ===================================================
   drawEffects(ctx) {
 
-    // futuro
+    // FUTURE
   }
 
-  // -----------------------------------------------
-  // CUTSCENE FUTURA
-  // -----------------------------------------------
+  // ===================================================
+  // CUTSCENE
+  // ===================================================
   startIntroCutscene() {
 
-    this.isCutscenePlaying = true;
+    this.isCutscenePlaying =
+      true;
   }
 }
+
+// ===================================================
+// EXPORT
+// ===================================================
+window.Phase = Phase;
+
+console.log(
+  '[phase] arcade combat phase system carregado'
+);
