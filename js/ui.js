@@ -338,13 +338,13 @@ const HUD = {
     ctx.font = '11px monospace';
     ctx.fillText(`${player.hp}/${player.maxHp}`, x + 42, y + 22);
 
-    // ===========================================
+   // ===========================================
     // BARRA DE ESPECIAL
     // ===========================================
     const specialRatio =
     player.energy / player.maxEnergy;
 
-    // Fundo
+    /*// Fundo
     ctx.fillStyle = '#1E1E1E';
 
     ctx.fillRect(
@@ -391,6 +391,7 @@ const HUD = {
       x + 44,
       y + 42
     );
+    */
   },
 
   // Timer central
@@ -570,7 +571,7 @@ const HUD = {
     ctx.fillStyle = 'rgba(255,255,255,0.5)';
     ctx.font = '11px monospace';
     ctx.fillText(
-      'A/D:Mover  W/Espaço:Pular  J:Soco  K:Chute  L:Defesa  P:Pausa',
+      'A/D:Mover  W/Espaço:Pular  J:Soco  K:Chute  W+K:Chute Aéreo J+J+K:Combo L:Defesa  P:Pausa',
       10, canvas.height - 7
     );
 

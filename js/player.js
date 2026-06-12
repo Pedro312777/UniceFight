@@ -314,7 +314,7 @@ if (gender === "feminino") {
     this.animations =
     AnimationData.playerMasculino;
 
-    this.spriteScale = 1.30;
+    this.spriteScale = 1.25;
 
 }
 
