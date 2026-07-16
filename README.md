@@ -96,10 +96,12 @@ git clone https://github.com/Pedro312777/UniceFight.git
 
 Graduado em Análise e Desenvolvimento de Sistemas.
 
-GitHub: https://github.com/Pedro312777
+---
 
-LinkedIn: https://www.linkedin.com/in/josepedro-dev/
+## 📫 Contato
 
+- LinkedIn: https://www.linkedin.com/in/josepedro-dev/
+- Email: josepedrointeligencia@gmail.com
 
 ---
 
