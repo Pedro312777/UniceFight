@@ -94,7 +94,7 @@ git clone https://github.com/Pedro312777/UniceFight.git
 
 **José Pedro Silva Morais**
 
-Graduado em Análise e Desenvolvimento de Sistemas.
+🎓 Graduado em Análise e Desenvolvimento de Sistemas.
 
 ---
 
