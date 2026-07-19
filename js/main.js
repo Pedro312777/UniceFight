@@ -268,7 +268,7 @@ function init() {
 
   pausePressed = false;
 
-  Game.currentPhaseIndex = 4;
+  Game.currentPhaseIndex = 0;
 
   Game.state =
     STATES.PLAYING;
