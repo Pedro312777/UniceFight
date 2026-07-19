@@ -36,6 +36,7 @@ const GAME_HEIGHT = 480;
 
 canvas.width = GAME_WIDTH;
 canvas.height = GAME_HEIGHT;
+let debugMode = false;
 
 // ===================================================
 // RESPONSIVE
@@ -88,7 +89,9 @@ const STATES = {
 
   PHASE_COMPLETE: 'phaseComplete',
 
-  VICTORY: 'victory'
+  VICTORY: 'victory',
+
+  FINAL: 'final'
 };
 
 // ===================================================
@@ -265,7 +268,7 @@ function init() {
 
   pausePressed = false;
 
-  Game.currentPhaseIndex = 0;
+  Game.currentPhaseIndex = 4;
 
   Game.state =
     STATES.PLAYING;
@@ -471,20 +474,28 @@ window.addEventListener(
       return;
     }
 
-    if (
-      Game.state === STATES.CREDITS ||
-      Game.state === STATES.SETTINGS
-    ) {
+if (
+    Game.state === STATES.CREDITS ||
+    Game.state === STATES.SETTINGS
+) {
+    if (e.key === 'Backspace') {
+        Game.state = STATES.MENU;
+    }
+    return;
+}
 
-      if (
-        e.key === 'Backspace'
-      ) {
+if (Game.state === STATES.FINAL) {
+    if (e.key === 'Backspace') {
+        Game.state = STATES.MENU;
+    }
+    if (e.key === 'Enter') {
+        init();
+    }
+    return;
+}
 
-        Game.state =
-          STATES.MENU;
-      }
-
-      return;
+    if (e.key.toLowerCase() === 'h') {
+      debugMode = !debugMode;
     }
     // =================================
     // PAUSE
@@ -536,20 +547,23 @@ window.addEventListener(
       }
 
       // Reiniciar jogo
-      if (
+if (Game.state === STATES.GAME_OVER) {
+    enterPressed = false;
+    init();
+    return;
+}
 
-        Game.state ===
-          STATES.GAME_OVER ||
+if (Game.state === STATES.VICTORY) {
+    console.log("VICTORY → FINAL");
+    Game.state = STATES.FINAL;
+    return;
+}
 
-        Game.state ===
-          STATES.VICTORY
-
-      ) {
-
-        enterPressed = false;
-
-        init();
-      }
+if (Game.state === STATES.FINAL) {
+    enterPressed = false;
+    init();
+    return;
+}
     }
   }
 );
@@ -615,6 +629,8 @@ function gameLoop(timestamp = 0) {
   // CAMERA
   // ===================================
   Camera.begin(ctx);
+
+  console.log("STATE ATUAL:", Game.state);
 
   switch (Game.state) {
 
@@ -707,6 +723,18 @@ function gameLoop(timestamp = 0) {
       );
 
       break;
+
+      case STATES.FINAL:
+
+      console.log("DESENHANDO FINAL");
+
+    drawFinalScreen(
+        ctx,
+        canvas,
+        Game.lastFrameTime
+    );
+
+    break;
   }
 
   Camera.end(ctx);
@@ -1145,6 +1173,13 @@ function drawGame() {
   // COMBO COUNTER
   // ===================================
   drawComboCounter();
+  if (debugMode && Game.player) {
+    drawAllBoxes(ctx, Game.player);
+  }
+
+  if (debugMode && Game.phase?.boss) {
+    drawAllBoxes(ctx, Game.phase.boss);
+  }
 }
 
 

@@ -155,19 +155,19 @@ const BOSS_DATA = {
 
 
 
-  fase5: {
-    name: 'Professor Final',
+fase5: {
+    name: 'Professor Weverson',
     subject: 'Programação em games',
     style: 'elite',
     color: '#AA2222',
     hp: 380,
-    speed: 2.2,
+    speed: 1.8,
     aggression: 1.0,
     personality: {
-      reactionTime: 2,
-      repetitionRate: 0.75,
-      pressureLevel: 1.0,
-      chasePower: 0.95,
+      reactionTime: 4,
+      repetitionRate: 0.45,
+      pressureLevel: 0.85,
+      chasePower: 0.75,
       recoveryBias: 0.9,
       isTank: true,
       armorLevel: 0.35,
@@ -716,6 +716,13 @@ class Boss {
 
     this.classicGhost = null;
 
+    this.classicShip = null;
+
+    this.classicPacMan = null;
+
+    this.classicSequenceIndex = 0;
+    this.classicUsedSequence = false;
+
     this.classicAttackSuccess = false;
 
     this.classicPlayerEscaped = false;
@@ -725,7 +732,7 @@ class Boss {
 
 
     this.classicTimer = 0;
-    this.classicTriggeredOnce = false;
+
 
     this.classicType = null;
 
@@ -745,7 +752,7 @@ class Boss {
     this.classicTriggered = false;
 
 
-    this.classicCooldown = 0;
+    this.classicCooldown = 300;
 
     this.classicGhost = null;
 
@@ -758,9 +765,7 @@ this.isControlInversion = false;
 
 this.controlInversionTimer = 0;
 
-this.controlInversionCooldown = 900;
-
-this.controlInversionUsed = false;
+this.controlInversionCooldown = 0;
 
 
     this.isComboing = false;
@@ -977,6 +982,7 @@ if (this.key === "pedro") {
 this.animations =
 AnimationData.professorPedro;
 this.spriteScale = 1.30;
+this.animationSpeedMultiplier = 1.0
 
 }
 
@@ -988,6 +994,7 @@ else if (this.key === "fase2") {
     this.animations =
     AnimationData.professorRomes;
     this.spriteScale =  1.22;
+    this.animationSpeedMultiplier = 0.6
 }
 
 else if (this.key === "fase3") {
@@ -998,6 +1005,7 @@ else if (this.key === "fase3") {
 this.animations =
 AnimationData.professorRomulo;
 this.spriteScale = 1.34;
+this.animationSpeedMultiplier = 1.0
 
 }
 
@@ -1009,6 +1017,7 @@ else if (this.key === "fase4") {
     this.animations =
     AnimationData.professorGeovanne;
     this.spriteScale = 1.41;
+    this.animationSpeedMultiplier = 1.0
 }
 
 else if (this.key === "fase5") {
@@ -1019,6 +1028,7 @@ else if (this.key === "fase5") {
     this.animations =
     AnimationData.professorWeverson;
     this.spriteScale = 1.38;
+    this.animationSpeedMultiplier = 1.0;
 }
 
 else {
@@ -1031,7 +1041,50 @@ else {
 
 this.spriteOffsetY = -60;
 
-this.animationSpeedMultiplier = 0.6;
+if (this.key === "pedro") {
+  this.attackHitboxDef = {
+    punch: { oy: -2000, w: 42, h: 1144 },
+    kick:  { oy: 28, w: 54, h: 26 }
+  };
+} else if (this.key === "fase2") {
+  this.attackHitboxDef = {
+    punch: { oy: 20, w: 42, h: 34 },
+    kick:  { oy: 28, w: 54, h: 26 }
+  };
+} else if (this.key === "fase3") {
+  this.attackHitboxDef = {
+    punch: { oy: 20, w: 42, h: 34 },
+    kick:  { oy: 28, w: 54, h: 26 }
+  };
+} else if (this.key === "fase4") {
+  this.attackHitboxDef = {
+    punch: { oy: 20, w: 42, h: 34 },
+    kick:  { oy: 28, w: 54, h: 26 }
+  };
+} else if (this.key === "fase5") {
+  this.attackHitboxDef = {
+    punch: { oy: 20, w: 42, h: 34 },
+    kick:  { oy: 28, w: 54, h: 26 }
+  };
+}
+
+
+// ← ADICIONA AQUI
+if (this.key === "pedro") {
+  this.hurtboxDef = { ox: 0.05, oy: -1.70, w: 0.90, h: 1.50 };
+}
+else if (this.key === "fase2") {
+  this.hurtboxDef = { ox: 0.05, oy: -1.55, w: 0.90, h: 1.50 };
+}
+else if (this.key === "fase3") {
+  this.hurtboxDef = { ox: 0.05, oy: -1.85, w: 0.90, h: 1.65 };
+}
+else if (this.key === "fase4") {
+  this.hurtboxDef = { ox: 0.05, oy: -1.87, w: 0.90, h: 1.75 };
+}
+else if (this.key === "fase5") {
+  this.hurtboxDef = { ox: 0.05, oy: -1.75, w: 0.90, h: 1.65 };
+}
 
 initializeAnimator(this);
 
@@ -1690,44 +1743,12 @@ if (
 
 
 if (
-    this.key === "fase5" &&
-    !this.classicTriggeredOnce &&
-    !this.isClassicAttack &&
-    dist > 100 &&
-    dist < 250
+  this.key === "fase5" &&
+  this.classicCooldown <= 0 &&
+  !this.isClassicAttack
 ) {
-    this.classicTriggeredOnce = true;
-    this.startClassicAttack();
-    return;
-}
-
-if (
-    this.key === "fase5" &&
-    this.classicTriggeredOnce &&
-    this.classicCooldown <= 0 &&
-    !this.isClassicAttack &&
-    dist > 100 &&
-    dist < 250
-) {
-    this.startClassicAttack();
-    return;
-}
-
-if (
-    this.key === "fase5" &&
-    this.classicTriggeredOnce &&
-    !this.controlInversionUsed &&
-    this.controlInversionCooldown <= 0 &&
-    !this.isControlInversion &&
-    !this.isAttacking &&
-    !this.isKicking &&
-    dist > 60 &&
-    dist < 280
-) {
-    this.controlInversionUsed = true;
-    this.startControlInversion(player);
-    this.controlInversionCooldown = 600;
-    return;
+  this.startClassicAttack();
+  return;
 }
 
 
@@ -2721,7 +2742,8 @@ startJoke() {
 
 
 
-    this.y
+    this.y,
+    this
   );
 
 
@@ -2823,7 +2845,8 @@ startEasyAttack() {
 
 
 
-    this.y
+    this.y,
+    this
   );
 
 
@@ -2931,7 +2954,8 @@ this.width / 2,
 
 
 
-this.y
+this.y,
+this
 
 
 
@@ -3002,7 +3026,8 @@ showCombatQuote(
 
     this.x + this.width / 2,
 
-    this.y
+    this.y,
+    this
 
 );
 }
@@ -3020,7 +3045,23 @@ startClassicAttack() {
   this.classicAttackSuccess = false;
 
 
-this.classicType = "ghost";
+if (!this.classicUsedSequence) {
+const sequence = ["ghost", "ship", "pacman"];
+this.classicType = sequence[this.classicSequenceIndex];
+this.classicSequenceIndex++;
+if (this.classicSequenceIndex >= sequence.length) {
+    this.classicUsedSequence = true;
+}
+} else {
+    const options = ["ghost", "ship", "pacman"];
+    this.classicType = options[Math.floor(Math.random() * options.length)];
+}
+
+console.log(
+    "CLASSIC TYPE:", this.classicType,
+    "SEQ INDEX:", this.classicSequenceIndex,
+    "USED SEQUENCE:", this.classicUsedSequence
+)
 
 
   this.isClassicAttack = true;
@@ -3035,7 +3076,7 @@ this.classicType = "ghost";
 
   this.velocityX = 0;
 
-  this.classicCooldown = 600;
+  this.classicCooldown = 480;
 
   const playerCenter =
       Game.player.x +
@@ -3058,33 +3099,48 @@ this.classicType = "ghost";
   }
 
 
-  showCombatQuote(
-
-
-    "Todo desenvolvedor aprende com os clássicos.",
-
-
-    this.x + this.width / 2,
-
-
-    this.y
-
-
-  );
+if (this.classicType === "ship") {
+    showCombatQuote(
+        "Prepare-se para a invasão!",
+        this.x + this.width / 2,
+        this.y,
+        this
+    );
+} else if (this.classicType === "pacman") {
+    showCombatQuote(
+        "E esse clássico?",
+        this.x + this.width / 2,
+        this.y,
+        this
+    );
+} else {
+    showCombatQuote(
+        "Todo desenvolvedor aprende com os clássicos.",
+        this.x + this.width / 2,
+        this.y,
+        this
+    );
+}
 
 
 }
 
-startControlInversion(player) {
+startControlInversion() {
+
     this.isControlInversion = true;
+
     this.controlInversionTimer = 300; // 5 segundos
 
     player.controlsInverted = true;
 
     showCombatQuote(
+
         "Eu programo as regras deste jogo.",
+
         this.x + this.width / 2,
+
         this.y
+
     );
 }
 
@@ -3613,11 +3669,6 @@ else {
     }
 
 
-    if (this.controlInversionCooldown > 0) {
-    this.controlInversionCooldown--;
-}
-
-
     if (this.exhaustedTimer > 0) {
 
 
@@ -3756,7 +3807,7 @@ if (player) {
 
 
 
-      player.y
+      player.y - 60
 
 
 
@@ -3773,7 +3824,8 @@ if (player) {
     showCombatQuote(
       "Que sono...",
       player.x + player.width / 2,
-      player.y
+      player.y - 60
+
     );
 }
 }
@@ -4036,7 +4088,7 @@ if (
 
 
 
-      player.y
+      player.y - 60
 
 
 
@@ -4108,7 +4160,8 @@ player.takeDamage(24, true);
 
 
 
-    this.y
+    this.y,
+    this
 
 
 
@@ -4631,7 +4684,8 @@ if (this.visaPhase === 3) {
 
 
 
-      this.y
+      this.y,
+      this
 
 
 
@@ -5019,7 +5073,8 @@ this.width / 2,
 
 
 
-this.y
+this.y,
+this
 
 
 
@@ -5552,6 +5607,14 @@ if (this.classicPhase === 2) {
             arenaCenter
         );
 
+if (this.classicType === "ship") {
+
+    this.velocityX = 0;
+    this.classicTimer = 60;
+    this.classicPhase = 3;
+
+} else {
+
     if (distance < 120) {
 
         console.log(
@@ -5559,13 +5622,12 @@ if (this.classicPhase === 2) {
         );
 
         this.velocityX = 0;
-
         this.classicTimer = 60;
-
         this.classicPhase = 3;
     }
+}
 
-    return;
+return;
 }
     }
 
@@ -5589,8 +5651,7 @@ if (
 
     if (this.classicType === "ghost") {
 
-spawnClassicGhost(this);
-this.classicGhost = { isDead: false }; // proxy temporário até o fantasma nascer
+    window.spawnClassicGhost(this);
 
         console.log(
             "FANTASMA INVOCADO"
@@ -5599,11 +5660,16 @@ this.classicGhost = { isDead: false }; // proxy temporário até o fantasma nasc
     } 
     else if (this.classicType === "ship") {
 
-        this.startShipAttack();
+        window.spawnClassicShip(this);
 
         console.log(
             "NAVE INVOCADA"
         );
+    }
+
+       else if (this.classicType === "pacman") {
+        window.spawnClassicPacMan(this);
+        console.log("PAC-MAN INVOCADO");
     }
 }
 
@@ -5621,13 +5687,35 @@ this.classicGhost = { isDead: false }; // proxy temporário até o fantasma nasc
 
 if (this.classicPhase === 4) {
 
-if (
+  
 
-    !this.classicGhost ||
+const classicEntity =
+    this.classicType === "ghost"
+        ? this.classicGhost
+        : this.classicType === "ship"
+            ? this.classicShip
+            : this.classicPacMan;
 
-    this.classicGhost.isDead
+// Aguarda a entidade ser criada pelo setTimeout
+if (!classicEntity) {
+    return;
+}
 
-) {
+if (classicEntity.isDead) {
+
+    // Verifica se é o último ataque da sequência
+    const isLastAttack =
+        this.classicUsedSequence ||
+        this.classicType === "pacman";
+
+  console.log(
+    "CLASSIC ENTITY:",
+    classicEntity,
+    "TYPE:", this.classicType,
+    "GHOST:", this.classicGhost,
+    "SHIP:", this.classicShip,
+    "PACMAN:", this.classicPacMan
+);
 
         if (this.classicAttackSuccess) {
 
@@ -5645,15 +5733,51 @@ if (this.classicPlayerEscaped) {
     showCombatQuote(
         "Então vamos mudar as regras...",
         this.x + this.width / 2,
-        this.y
+        this.y,
+        this
     );
 }
 
-        this.classicPhase = 0;
+       this.classicPhase = 0;
 
         this.isClassicAttack = false;
 
         this.classicGhost = null;
+
+        this.classicShip = null;
+
+        this.classicPacMan = null;
+
+// Só aplica cooldown longo e vulnerabilidade após completar a sequência
+if (isLastAttack) {
+
+            this.classicCooldown = 2400;
+
+            this.exposedTimer = 360;
+
+            this.isStunned = true;
+
+            this.stunTimer = 360;
+
+            // Pequeno delay para a frase sair após ficar vulnerável
+            setTimeout(() => {
+
+                if (Game.phase && Game.phase.boss) {
+
+                    showCombatQuote(
+                        "Tem alguma coisa errada aqui...",
+                        Game.phase.boss.x + Game.phase.boss.width / 2,
+                        Game.phase.boss.y,
+                        Game.phase.boss
+                    );
+                }
+
+            }, 500);
+
+        } else {
+
+            this.classicCooldown = 600;
+        }
     }
 
     return;
@@ -5699,7 +5823,8 @@ if (this.isControlInversion) {
 
             this.x + this.width / 2,
 
-            this.y
+            this.y,
+            this
 
         );
     }
@@ -5888,75 +6013,29 @@ if (this.isControlInversion) {
   // ===================================================
   // HITBOX
   // ===================================================
-  getAttackHitbox() {
-
-
-
+ getAttackHitbox() {
+  const def = this.attackHitboxDef;
 
   if (this.isKicking) {
-
-
-
-
     return {
-
-
-
-
       x: this.facingRight
         ? this.x + this.width - 4
         : this.x - 54,
-
-
-
-
-      y: this.y + 28,
-
-
-
-
-      width: 54,
-
-
-
-
-      height: 26
+      y: this.y + (def ? def.kick.oy : 28),
+      width:  def ? def.kick.w : 54,
+      height: def ? def.kick.h : 26
     };
   }
 
-
-
-
-  if (!this.isAttacking) {
-    return null;
-  }
-
-
-
+  if (!this.isAttacking) return null;
 
   return {
-
-
-
-
     x: this.facingRight
       ? this.x + this.width - 8
       : this.x - 42,
-
-
-
-
-    y: this.y + 20,
-
-
-
-
-    width: 42,
-
-
-
-
-    height: 34
+    y: this.y + (def ? def.punch.oy : 20),
+    width:  def ? def.punch.w : 42,
+    height: def ? def.punch.h : 34
   };
 }
 
@@ -6145,6 +6224,15 @@ if (this.isControlInversion) {
 
     amount = Math.round(amount);
     }
+
+
+
+if (this.exposedTimer > 0) {
+
+    amount *= 1.75;
+    this.damageReduction = 1;
+}
+
 
     this.hp -= amount;
 
@@ -6567,8 +6655,5 @@ window.Boss = Boss;
 console.log(
   '[boss] balance patch final carregado'
 );
-
-
-
 
 

@@ -8,39 +8,11 @@
 // - Diálogos do Mestre Misterioso
 // - Tela de game over
 // - Tela de vitória / diploma
+//
+// O sistema de save (SaveSystem) foi movido para
+// js/saveSystem.js — certifique-se de que esse
+// arquivo seja carregado ANTES deste no HTML.
 // ===================================================
-
-// -----------------------------------------------
-// SISTEMA DE SAVE (localStorage)
-// -----------------------------------------------
-const SaveSystem = {
-  // Salva o progresso do jogador
-  save(data) {
-    localStorage.setItem('unicefight_save', JSON.stringify(data));
-    console.log('[SAVE] Progresso salvo!');
-  },
-
-  // Carrega o progresso salvo
-  load() {
-    const raw = localStorage.getItem('unicefight_save');
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
-  },
-
-  // Verifica se existe save
-  hasSave() {
-    return localStorage.getItem('unicefight_save') !== null;
-  },
-
-  // Apaga o save (novo jogo)
-  clear() {
-    localStorage.removeItem('unicefight_save');
-  }
-};
 
 // -----------------------------------------------
 // MENU PRINCIPAL
@@ -462,11 +434,27 @@ const HUD = {
 
     ctx.font = 'bold 12px monospace';
 
-    ctx.fillText(
-      boss.name,
-      x + 105,
-      y + 5
-    );
+ctx.textAlign = "center";
+
+ctx.fillStyle = '#FFF';
+
+let fontSize = 12;
+
+if (boss.name.length > 18) {
+    fontSize = 10;
+}
+
+ctx.font = `bold ${fontSize}px monospace`;
+
+ctx.textAlign = "center";
+
+ctx.fillText(
+    boss.name,
+    x + (barW / 2),
+    y + 5
+);
+
+ctx.textAlign = "left";
 
     // =========================================
     // FUNDO HP
@@ -534,7 +522,7 @@ const HUD = {
   drawPhaseInfo(ctx, currentPhase) {
     const phaseNames = [
       'Tutorial: Casa → Faculdade',
-      '1º Semestre: ALGORITMOS E PROGRAMAÇÃO',
+      '1º Semestre: Algoritimos e Programação',
       '2º Semestre: Metodologia Ágil Scrum',
       '3º Semestre: Programação Estruturada',
       '4º Semestre: Engenharia de Requisitos',
@@ -670,9 +658,14 @@ if (
     10;
 }
 
-const boxY =
-  CombatQuote.y -
-  80;
+if (CombatQuote.entity) {
+  const e = CombatQuote.entity;
+  const scale = e.spriteScale || 1;
+  CombatQuote.x = e.x + e.width / 2;
+  CombatQuote.y = e.y + (e.spriteOffsetY || 0) * scale;
+}
+
+const boxY = CombatQuote.y - 185;
 
 ctx.fillStyle =
   "rgba(0,0,0,0.8)";
@@ -791,6 +784,7 @@ if (player.comboComplete) {
   ctx.restore();
 }
 
+
 const CombatQuote = {
 
   visible: false,
@@ -801,13 +795,16 @@ const CombatQuote = {
 
   x: 0,
 
-  y: 0
+  y: 0,
+
+  entity: null
 };
 
 function showCombatQuote(
   text,
   x,
-  y
+  y,
+  entity = null
 ) {
 
   CombatQuote.visible = true;
@@ -819,6 +816,8 @@ function showCombatQuote(
   CombatQuote.x = x;
 
   CombatQuote.y = y;
+
+  CombatQuote.entity = entity;
 }
 
 function clearCombatQuote() {
@@ -1126,7 +1125,7 @@ function drawPhaseVictory(ctx, canvas, phaseNumber, score) {
 
   ctx.fillStyle = '#00E676';
   ctx.font = 'bold 64px monospace';
-  ctx.fillText(`Nota: ${nota}`, canvas.width / 2, 310);
+  ctx.fillText(`Nota: 10`, canvas.width / 2, 310);
 
   ctx.fillStyle = '#7AC';
   ctx.font = '18px monospace';

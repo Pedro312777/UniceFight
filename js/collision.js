@@ -1,30 +1,22 @@
 // ===================================================
-// UNICEFIGHT - COLLISION SYSTEM FINAL V6
-// BALANCED COMBAT UPDATE
+// UNICEFIGHT - COLLISION SYSTEM V7
+// HITBOX + HURTBOX UPDATE
 // ===================================================
-// MELHORIAS NOVAS:
-// ✔ Combate mais longo
-// ✔ Menos dano explosivo
-// ✔ Menos launch excessivo
-// ✔ Knockback balanceado
-// ✔ Hitstop reduzido
-// ✔ Menos infinitos
-// ✔ Boss mais estável
-// ✔ Pushbox mais natural
-// ✔ Dash menos dominante
-// ✔ LF2 pacing refinado
+// MELHORIAS V7:
+// ✔ Hurtbox separada do sprite (colisão visual correta)
+// ✔ Multihit no special attack via Set de IDs
+// ✔ Range check redundante removido
+// ✔ drawAllBoxes com hurtbox + hitbox + pushbox
+// ✔ getHurtbox exportável e reutilizável
+// ✔ Estrutura mais limpa e fácil de manter
 // ===================================================
 
 
 // ===================================================
-// COLISÃO RETANGULAR
+// COLISÃO RETANGULAR (AABB)
 // ===================================================
 function checkCollision(a, b) {
-
-
   return (
-
-
     a.x < b.x + b.width &&
     a.x + a.width > b.x &&
     a.y < b.y + b.height &&
@@ -34,104 +26,85 @@ function checkCollision(a, b) {
 
 
 // ===================================================
+// HURTBOX
+// Representa a área onde o personagem PODE ser atingido.
+// Menor que o sprite para evitar hits "fantasma".
+// Ajuste os multiplicadores conforme o sprite de cada char.
+// ===================================================
+function getHurtbox(entity) {
+  // Margem lateral: 15% de cada lado → 70% da largura total
+  // Margem superior: 8% do topo
+  // Altura: 88% do sprite
+  return {
+    x:      entity.x + entity.width  * 0.15,
+    y:      entity.y + entity.height * 0.08,
+    width:  entity.width  * 0.70,
+    height: entity.height * 0.88
+  };
+}
+
+// Hurtbox customizada por tipo de personagem (opcional)
+// Se o personagem tiver um campo `hurtboxDef`, usa ele.
+// Exemplo: player.hurtboxDef = { ox: 0.15, oy: 0.08, w: 0.70, h: 0.88 }
+function getHurtboxForEntity(entity) {
+  const def = entity.hurtboxDef || {
+    ox: 0.15,
+     oy: -1.30,
+      w:  0.90,
+     h:  1.20
+  };
+  return {
+    x:      entity.x + entity.width  * def.ox,
+    y:      entity.y + entity.height * def.oy,
+    width:  entity.width  * def.w,
+    height: entity.height * def.h
+  };
+}
+
+
+// ===================================================
 // PLATFORM COLLISION
 // ===================================================
-function checkPlatformCollision(
-  entity,
-  platforms
-) {
-
-
+function checkPlatformCollision(entity, platforms) {
   entity.onGround = false;
 
-
   for (const platform of platforms) {
-
-
     const overlapX = (
-
-
-      entity.x + entity.width >
-      platform.x &&
-
-
-      entity.x <
-      platform.x + platform.width
+      entity.x + entity.width > platform.x &&
+      entity.x < platform.x + platform.width
     );
 
+    if (!overlapX) continue;
 
-    if (!overlapX) {
-      continue;
-    }
-
-
-    // ===============================================
+    // -----------------------------------------------
     // FLOOR
-    // ===============================================
-    const entityBottom =
-      entity.y + entity.height;
-
-
-    const previousBottom =
-      entityBottom - entity.velocityY;
-
-
+    // -----------------------------------------------
+    const entityBottom   = entity.y + entity.height;
+    const previousBottom = entityBottom - entity.velocityY;
     const landed = (
-
-
       previousBottom <= platform.y &&
-      entityBottom >= platform.y
+      entityBottom   >= platform.y
     );
 
-
-    if (
-      landed &&
-      entity.velocityY >= 0
-    ) {
-
-
-      entity.y =
-        platform.y - entity.height;
-
-
+    if (landed && entity.velocityY >= 0) {
+      entity.y         = platform.y - entity.height;
       entity.velocityY = 0;
-
-
-      entity.onGround = true;
+      entity.onGround  = true;
     }
 
-
-    // ===============================================
+    // -----------------------------------------------
     // CEILING
-    // ===============================================
-    const entityTop = entity.y;
-
-
-    const previousTop =
-      entityTop - entity.velocityY;
-
-
-    const platformBottom =
-      platform.y + platform.height;
-
-
+    // -----------------------------------------------
+    const entityTop      = entity.y;
+    const previousTop    = entityTop - entity.velocityY;
+    const platformBottom = platform.y + platform.height;
     const hitCeiling = (
-
-
-      previousTop >= platformBottom &&
-      entityTop <= platformBottom
+      previousTop    >= platformBottom &&
+      entityTop      <= platformBottom
     );
 
-
-    if (
-      hitCeiling &&
-      entity.velocityY < 0
-    ) {
-
-
-      entity.y = platformBottom;
-
-
+    if (hitCeiling && entity.velocityY < 0) {
+      entity.y         = platformBottom;
       entity.velocityY = 0;
     }
   }
@@ -141,235 +114,90 @@ function checkPlatformCollision(
 // ===================================================
 // WALLS
 // ===================================================
-function checkWallCollision(
-  entity,
-  canvasWidth
-) {
-
-
+function checkWallCollision(entity, canvasWidth) {
   if (entity.x < 0) {
-
-
     entity.x = 0;
   }
-
-
-  if (
-    entity.x + entity.width >
-    canvasWidth
-  ) {
-
-
-    entity.x =
-      canvasWidth - entity.width;
+  if (entity.x + entity.width > canvasWidth) {
+    entity.x = canvasWidth - entity.width;
   }
 }
 
 
 // ===================================================
-// HITBOX
+// HITBOX DE ATAQUE
+// Retorna a hitbox ativa do atacante, ou null se não houver.
+// Os timers garantem que a hitbox só aparece no frame certo.
 // ===================================================
 function getAttackHitbox(attacker) {
-
-
   let hitboxWidth;
   let hitboxHeight;
   let hitboxY;
   let attackOffset;
 
-
-  // ===============================================
+  // -----------------------------------------------
   // PUNCH
-  // ===============================================
-  if (
-    attacker.isAttacking &&
-    attacker.attackTimer >= 4
-  ) {
-
-
-hitboxWidth = 52;
-hitboxHeight = 28;
-
-
-attackOffset = 6;
-
-
-hitboxY =
-attacker.y +
-attacker.height * 0.38;
+  // -----------------------------------------------
+  if (attacker.isAttacking && attacker.attackTimer <= 5 && attacker.attackTimer >= 2) {
+    hitboxWidth  = 52;
+    hitboxHeight = 28;
+    attackOffset = 6;
+    hitboxY = attacker.y + (attacker.spriteOffsetY || 0) - attacker.height * 0.67;
   }
 
-
-  // ===============================================
+  // -----------------------------------------------
   // KICK
-  // ===============================================
-  else if (
-    attacker.isKicking &&
-    attacker.attackTimer >= 5
-  ) {
-   
-hitboxWidth = 82;
-
-
-hitboxHeight = 26;
-
-
-attackOffset = 8;
-
-
-hitboxY =
-attacker.y +
-attacker.height * 0.44;
-  }
-
-
-  // ===============================================
-  // AIR KICK
-  // ===============================================
-  else if (
-    attacker.isAirKicking &&
-    attacker.attackTimer >= 4
-  ) {
-
-
-    hitboxWidth = 76;
-
-
+  // -----------------------------------------------
+// AIR KICK — vem primeiro!
+  if (attacker.isAirKicking && attacker.attackTimer <= 10 && attacker.attackTimer >= 3) {
+    hitboxWidth  = 76;
     hitboxHeight = 58;
-
-
     attackOffset = 0;
-
-
-    hitboxY = attacker.y + 6;
+    hitboxY = attacker.y + (attacker.spriteOffsetY || 0) + attacker.height * 0.100;
   }
 
+  // KICK
+  else if (attacker.isKicking && attacker.attackTimer <= 10 && attacker.attackTimer >= 4) {
+    hitboxWidth  = 82;
+    hitboxHeight = 26;
+    attackOffset = 8;
+    hitboxY = attacker.y + (attacker.spriteOffsetY || 0) - attacker.height * 0.55;
+  }
 
-  // ===============================================
+  // -----------------------------------------------
   // SPECIAL
-  // ===============================================
-  else if (
-    attacker.isSpecialAttacking
-  ) {
-
-
-    hitboxWidth = 104;
-
-
+  // -----------------------------------------------
+  else if (attacker.isSpecialAttacking) {
+    hitboxWidth  = 104;
     hitboxHeight = 78;
-
-
     attackOffset = 0;
-
-
-    hitboxY = attacker.y + 4;
+    hitboxY = attacker.y + (attacker.spriteOffsetY || 0) + 4;
   }
 
+  // -----------------------------------------------
+  // SEM HITBOX ATIVA
+  // -----------------------------------------------
+  if (hitboxWidth === undefined) return null;
 
-  // ===============================================
-  // NO HITBOX
-  // ===============================================
-  if (
-    hitboxWidth === undefined
-  ) {
+  const bodyCenterX = attacker.x + attacker.width / 2;
 
-
-    return null;
-  }
-
-
-const bodyCenterX =
-
-
-attacker.x +
-
-
-(attacker.width / 2);
-
-
-
-
-return {
-
-
-x:
-
-
-attacker.facingRight
-
-
-?
-
-
-bodyCenterX +
-
-
-(attacker.width * 0.25)
-
-
--
-
-
-attackOffset
-
-
-:
-
-
-bodyCenterX -
-
-
-hitboxWidth -
-
-
-(attacker.width * 0.25)
-
-
-+
-
-
-attackOffset,
-
-
-y: hitboxY,
-
-
-width: hitboxWidth,
-
-
-height: hitboxHeight
-
-
-};
+  return {
+    x: attacker.facingRight
+      ? bodyCenterX + (attacker.width * 0.25) - attackOffset
+      : bodyCenterX - hitboxWidth - (attacker.width * 0.25) + attackOffset,
+    y:      hitboxY,
+    width:  hitboxWidth,
+    height: hitboxHeight
+  };
 }
 
 
 // ===================================================
 // HITSTOP
 // ===================================================
-function applyHitstop(
-  attacker,
-  target,
-  duration = 3
-) {
-
-
-  if (attacker.applyHitstop) {
-
-
-    attacker.applyHitstop(
-      duration
-    );
-  }
-
-
-  if (target.applyHitstop) {
-
-
-    target.applyHitstop(
-      duration
-    );
-  }
+function applyHitstop(attacker, target, duration = 3) {
+  if (attacker.applyHitstop) attacker.applyHitstop(duration);
+  if (target.applyHitstop)   target.applyHitstop(duration);
 }
 
 
@@ -377,44 +205,10 @@ function applyHitstop(
 // PRIORITY
 // ===================================================
 function getAttackPriority(attacker) {
-
-
-  if (
-    attacker.isSpecialAttacking
-  ) {
-
-
-    return 5;
-  }
-
-
-  if (
-    attacker.comboStep >= 3
-  ) {
-
-
-    return 4;
-  }
-
-
-  if (
-    attacker.isAirKicking
-  ) {
-
-
-    return 3;
-  }
-
-
-  if (
-    attacker.isKicking
-  ) {
-
-
-    return 2;
-  }
-
-
+  if (attacker.isSpecialAttacking) return 5;
+  if (attacker.comboStep >= 3)     return 4;
+  if (attacker.isAirKicking)       return 3;
+  if (attacker.isKicking)          return 2;
   return 1;
 }
 
@@ -422,866 +216,314 @@ function getAttackPriority(attacker) {
 // ===================================================
 // KNOCKBACK
 // ===================================================
-function applyKnockback(
-  target,
-  forceX,
-  forceY
-) {
-
-
-  // ===============================================
-  // RESISTÊNCIA
-  // ===============================================
-  const resistance =
-    target.knockbackResistance || 1;
-
-
+function applyKnockback(target, forceX, forceY) {
+  const resistance = target.knockbackResistance || 1;
   forceX *= resistance;
   forceY *= resistance;
 
-
-  // ===============================================
-  // TANK ARMOR
-  // ===============================================
-  if (
-    target.superArmor &&
-    Math.abs(forceY) < 5
-  ) {
-
-
+  // Tank armor reduz knock sem quebrar
+  if (target.superArmor && Math.abs(forceY) < 5) {
     forceX *= 0.55;
     forceY *= 0.35;
   }
 
-
-  // ===============================================
-  // LIMITADORES
-  // ===============================================
-  forceX = Math.max(
-    -5.5,
-    Math.min(5.5, forceX)
-  );
-
-
-  forceY = Math.max(
-    -6,
-    Math.min(3, forceY)
-  );
-
+  // Limites absolutos
+  forceX = Math.max(-5.5, Math.min(5.5, forceX));
+  forceY = Math.max(-6,   Math.min(3,   forceY));
 
   target.velocityX = forceX;
   target.velocityY = forceY;
-
-
-  target.onGround = false;
+  target.onGround  = false;
 }
 
 
 // ===================================================
 // HIT REACTION
 // ===================================================
-function applyHitReaction(
-  attacker,
-  target,
-  damage,
-  knockbackX,
-  knockbackY
-) {
+function applyHitReaction(attacker, target, damage, knockbackX, knockbackY) {
+  const launcherHit = knockbackY <= -5;
+  const armorBreak  = damage >= (target.armorBreakThreshold || 999);
 
-
-  const launcherHit =
-    knockbackY <= -5;
-
-
-  const heavyHit =
-    damage >= 10;
-
-
-  // ===============================================
-  // ARMOR BREAK
-  // ===============================================
-  const armorBreak =
-    damage >= (
-      target.armorBreakThreshold || 999
-    );
-
-
-  // ===============================================
-  // TANK LAUNCH RESIST
-  // ===============================================
-  if (
-    launcherHit &&
-    target.launchResistance
-  ) {
-
-
-    knockbackY *=
-      target.launchResistance;
-
-
-    knockbackX *=
-      target.launchResistance;
+  // Launch resistance (ex: boss)
+  if (launcherHit && target.launchResistance) {
+    knockbackY *= target.launchResistance;
+    knockbackX *= target.launchResistance;
   }
 
-
-  // ===============================================
-  // SUPER ARMOR
-  // ===============================================
-  if (
-    target.superArmor &&
-    !armorBreak
-  ) {
-
-
-    applyKnockback(
-      target,
-      knockbackX * 0.55,
-      knockbackY * 0.35
-    );
-
-
+  // Super armor: absorve sem voar
+  if (target.superArmor && !armorBreak) {
+    applyKnockback(target, knockbackX * 0.55, knockbackY * 0.35);
     return;
   }
 
-
-  // ===============================================
-  // LAUNCH
-  // ===============================================
-  if (
-    launcherHit &&
-    target.launch
-  ) {
-
-
-    target.launch(
-      knockbackX,
-      knockbackY
-    );
-
-
+  // Launch
+  if (launcherHit && target.launch) {
+    target.launch(knockbackX, knockbackY);
     return;
   }
 
-
-  // ===============================================
-  // NORMAL HIT
-  // ===============================================
-  applyKnockback(
-    target,
-    knockbackX,
-    knockbackY
-  );
-
-
-  // ===============================================
-  // HARD HIT
-  // ===============================================
- 
-  //if (
-  //  heavyHit &&
-  //  target.onGround &&
-  //  target.knockDown
-  //) {
-
-
-  //  target.knockDown();
- // }
+  // Normal
+  applyKnockback(target, knockbackX, knockbackY);
 }
- 
 
 
 // ===================================================
 // ATTACK COLLISION
+// Principal função de detecção de hit.
+//
+// V7 — MUDANÇAS:
+// • Colide contra HURTBOX (não o sprite inteiro)
+// • Special usa Set de IDs para multihit
+// • Range check horizontal/vertical REMOVIDO
+//   (a hitbox + hurtbox já controlam o alcance)
+// • Único filtro de segurança mantido: distância Y > 90
 // ===================================================
-function checkAttackCollision(
-  attacker,
-  target
-) {
+function checkAttackCollision(attacker, target) {
 
-
+  // Sem ataque ativo → ignora
   if (
-
-
     !attacker.isAttacking &&
-    !attacker.isKicking &&
+    !attacker.isKicking   &&
     !attacker.isAirKicking &&
     !attacker.isSpecialAttacking
-  ) {
+  ) return false;
 
+  // Invulnerabilidade do alvo
+  if (target.invulnerabilityTimer > 0) return false;
 
-    return false;
+  // -----------------------------------------------
+  // CONTROLE DE MULTIHIT
+  // Special attack: pode acertar o mesmo alvo múltiplas
+  //   vezes (Set por ID). Outros ataques: flag booleana.
+  // -----------------------------------------------
+  if (attacker.isSpecialAttacking) {
+    // Garante que o Set existe
+    if (!attacker.hitTargetsThisSwing) {
+      attacker.hitTargetsThisSwing = new Set();
+    }
+    if (attacker.hitTargetsThisSwing.has(target.id)) return false;
+  } else {
+    if (attacker.attackAlreadyHit) return false;
   }
 
+  // Obtém hitbox do atacante
+  const attackHitbox = getAttackHitbox(attacker);
+  if (!attackHitbox) return false;
 
-  if (
-    attacker.attackAlreadyHit
-  ) {
+  // Filtro de segurança vertical (evita hits entre andares)
+  if (Math.abs(attacker.y - target.y) > 90) return false;
 
+  // -----------------------------------------------
+  // HURTBOX DO ALVO
+  // Colisão contra área menor que o sprite inteiro,
+  // evitando hits visuais incorretos.
+  // -----------------------------------------------
+  const hurtbox = getHurtboxForEntity(target);
 
-    return false;
-  }
+  if (!checkCollision(attackHitbox, hurtbox)) return false;
 
+  // ===================================================
+  // HIT CONFIRMADO
+  // ===================================================
 
-  if (
-    target.invulnerabilityTimer > 0
-  ) {
-
-
-    return false;
-  }
-
-
-  const attackHitbox =
-    getAttackHitbox(attacker);
-
-
-  if (!attackHitbox) {
-
-
-    return false;
-  }
-
-
-  // ===============================================
-  // RANGE
-  // ===============================================
-  const centerA =
-    attacker.x +
-    attacker.width / 2;
-
-
-  const centerB =
-    target.x +
-    target.width / 2;
-
-
-  const horizontalDistance =
-    Math.abs(centerA - centerB);
-
-
-  const verticalDistance =
-    Math.abs(attacker.y - target.y);
-
-
-  let maxHorizontal = 72;
-
-
-  if (
-    attacker.isKicking ||
-    attacker.isAirKicking
-  ) {
-
-
-    maxHorizontal = 96;
-  }
-
-
-  if (
-    attacker.isSpecialAttacking
-  ) {
-
-
-    maxHorizontal = 122;
-  }
-
-
-  if (
-    horizontalDistance >
-    maxHorizontal
-  ) {
-
-
-    return false;
-  }
-
-
-  if (
-    verticalDistance > 66
-  ) {
-
-
-    return false;
-  }
-
-
-  // ===============================================
-  // FINAL HIT
-  // ===============================================
-  if (
-    checkCollision(
-      attackHitbox,
-      target
-    )
-  ) {
-
-
+  // Registra hit no controle de multihit
+  if (attacker.isSpecialAttacking) {
+    attacker.hitTargetsThisSwing.add(target.id);
+  } else {
     attacker.attackAlreadyHit = true;
-
-
-    if (attacker.comboStep === 1) {
-
-
-    attacker.comboHitsConnected = 1;
-    }
-
-
-    else if (attacker.comboStep === 2) {
-
-
-        attacker.comboHitsConnected = 2;
-    }
-   
-    // =============================================
-    // DAMAGE
-    // =============================================
-    let damage =
-      attacker.attackDamage || 0;
-
-
-
-
-    if (attacker.isKicking) {
-
-
-      damage = attacker.attackDamage;
-    }
-
-
-    if (attacker.isAirKicking) {
-
-
-      damage =
-        attacker.airKickDamage ||
-        damage;
-    }
-
-
-    if (
-      attacker.isSpecialAttacking
-    ) {
-
-
-      damage *= 1.25;
-    }
-
-
-    // =============================================
-    // COMBO SCALING
-    // =============================================
-    /*
-    if (
-      attacker.comboHits >= 4
-    ) {
-
-
-      damage *= 0.88;
-    }
-
-
-    if (
-      attacker.comboHits >= 7
-    ) {
-
-
-      damage *= 0.75;
-    }
-      */
-
-
-    // =============================================
-    // TANK DAMAGE REDUCTION
-    // =============================================
-    if (
-      target.damageReduction
-    ) {
-
-
-      damage *=
-        target.damageReduction;
-    }
-
-
-    damage = Math.max(
-      1,
-      Math.floor(damage)
-    );
-
-
-    // =============================================
-    // HITSTOP
-    // =============================================
-    let hitstop = 2;
-
-
-    if (damage >= 10) {
-
-
-      hitstop = 4;
-    }
-
-
-    if (
-      attacker.isSpecialAttacking
-    ) {
-
-
-      hitstop = 5;
-    }
-
-
-    applyHitstop(
-      attacker,
-      target,
-      hitstop
-    );
-
-
-    // =============================================
-    // KNOCKBACK
-    // =============================================
-    let knockbackX =
-      attacker.facingRight
-        ? 3
-        : -3;
-
-
-    let knockbackY = -1.1;
-
-
-    // =============================================
-    // FINISHER
-    // =============================================
-    if (
-      attacker.comboStep >= 3
-    ) {
-
-
-      knockbackX *= 1.45;
-
-
-      knockbackY = -4.5;
-    }
-
-
-    // =============================================
-    // SPECIAL
-    // =============================================
-    if (
-      attacker.isSpecialAttacking
-    ) {
-
-
-      knockbackX *= 1.8;
-
-
-      knockbackY = -5.8;
-    }
-
-
-    // =============================================
-    // AIR KICK
-    // =============================================
-    if (
-      attacker.isAirKicking
-    ) {
-
-
-      knockbackY = -3.2;
-    }
-
-
-    // =============================================
-    // DASH MOMENTUM
-    // =============================================
-    if (
-      attacker.isDashing
-    ) {
-
-
-      knockbackX *= 1.1;
-    }
-
-
-
-
-    // =============================================
-    // DEBUG COMBO
-    // =============================================
-    console.log(
-      "DANO:",
-      damage,
-      "STEP:",
-      attacker.comboStep,
-      "FINISHER:",
-      attacker.isComboFinisher
-    );
-
-
-    // =============================================
-    // DAMAGE
-    // =============================================
-    if (target.takeDamage) {
-
-
-    console.log(
-    "ANTES TAKE DAMAGE:",
-    damage
-      );
-
-
-      target.takeDamage(
-        damage
-      );
-    }
-   
-    // =============================================
-    // FRAQUEZA DO RÔMES
-    // =============================================
-      if (
-          attacker.isComboFinisher &&
-          attacker.finisherReady &&
-          target.onComboPressure
-      ) {
-
-
-          target.onComboPressure();
-      }
-
-
-        console.log(
-      "FINISHER?",
-      attacker.isComboFinisher,
-      "STEP:",
-      attacker.comboStep
-    );
-if (
+  }
+
+  // Atualiza combo step hits conectados
+  if      (attacker.comboStep === 1) attacker.comboHitsConnected = 1;
+  else if (attacker.comboStep === 2) attacker.comboHitsConnected = 2;
+
+  // -----------------------------------------------
+  // DAMAGE
+  // -----------------------------------------------
+  let damage = attacker.attackDamage || 0;
+
+  if (attacker.isKicking)          damage = attacker.attackDamage;
+  if (attacker.isAirKicking)       damage = attacker.airKickDamage || damage;
+  if (attacker.isSpecialAttacking) damage *= 1.25;
+
+  // Tank damage reduction
+  if (target.damageReduction) damage *= target.damageReduction;
+
+  damage = Math.max(1, Math.floor(damage));
+
+  // -----------------------------------------------
+  // HITSTOP
+  // -----------------------------------------------
+  let hitstop = 2;
+  if (damage >= 10)                hitstop = 4;
+  if (attacker.isSpecialAttacking) hitstop = 5;
+
+  applyHitstop(attacker, target, hitstop);
+
+  // -----------------------------------------------
+  // KNOCKBACK
+  // -----------------------------------------------
+  let knockbackX = attacker.facingRight ? 3 : -3;
+  let knockbackY = -1.1;
+
+  // Finisher (último hit do combo)
+  if (attacker.comboStep >= 3) {
+    knockbackX *= 1.45;
+    knockbackY  = -4.5;
+  }
+
+  // Special
+  if (attacker.isSpecialAttacking) {
+    knockbackX *= 1.8;
+    knockbackY  = -5.8;
+  }
+
+  // Air kick
+  if (attacker.isAirKicking) {
+    knockbackY = -3.2;
+  }
+
+  // Dash momentum
+  if (attacker.isDashing) {
+    knockbackX *= 1.1;
+  }
+
+  // -----------------------------------------------
+  // DEBUG
+  // -----------------------------------------------
+  console.log(
+    `[HIT] dano=${damage} step=${attacker.comboStep}` +
+    ` finisher=${attacker.isComboFinisher}` +
+    ` special=${attacker.isSpecialAttacking}`
+  );
+
+  // -----------------------------------------------
+  // APLICA DANO
+  // -----------------------------------------------
+  if (target.takeDamage) {
+    target.takeDamage(damage);
+  }
+
+  // -----------------------------------------------
+  // FRAQUEZA DO RÔMES
+  // -----------------------------------------------
+  if (
     attacker.isComboFinisher &&
-    attacker.finisherReady
-) {
+    attacker.finisherReady   &&
+    target.onComboPressure
+  ) {
+    target.onComboPressure();
+  }
 
+  // Combo completo
+  if (attacker.isComboFinisher && attacker.finisherReady) {
+    attacker.comboComplete      = true;
+    attacker.comboDisplayTimer  = 120;
+  }
 
-    attacker.comboComplete = true;
-    attacker.comboDisplayTimer = 120;
+  // Air kick callback
+  if (attacker.isAirKicking && target.onAirKickHit) {
+    target.onAirKickHit();
+  }
+
+  // -----------------------------------------------
+  // REAÇÃO AO HIT
+  // -----------------------------------------------
+  applyHitReaction(attacker, target, damage, knockbackX, knockbackY);
+
+  return true;
 }
 
-
-    if (
-      attacker.isAirKicking &&
-      target.onAirKickHit
-    ) {
-
-
-      target.onAirKickHit();
-    }
-
-
-    // =============================================
-    // REACTION
-    // =============================================
-    applyHitReaction(
-
-
-      attacker,
-      target,
-      damage,
-      knockbackX,
-      knockbackY
-    );
-
-
-    return true;
+// ===================================================
+// RESET MULTIHIT (chamar ao fim do special attack)
+// ===================================================
+function resetHitTargets(attacker) {
+  if (attacker.hitTargetsThisSwing) {
+    attacker.hitTargetsThisSwing.clear();
   }
-
-
-  return false;
 }
 
 
 // ===================================================
 // LF2 PUSH COLLISION
 // ===================================================
-function resolveEntityCollision(
-  entityA,
-  entityB
-) {
+function resolveEntityCollision(entityA, entityB) {
+  if (entityA.isDead || entityB.isDead) return;
 
-
-  if (
-    entityA.isDead ||
-    entityB.isDead
-  ) {
-
-
-    return;
-  }
-
-
-  /*
-  if (
-    entityA.isKnockedDown ||
-    entityB.isKnockedDown
-  ) {
-
-
-    return;
-  }
-  */
-
-
-  if (
-    !entityA.onGround ||
-    !entityB.onGround
-  ) {
-
-
-    return;
-  }
-
+  if (!entityA.onGround || !entityB.onGround) return;
 
   const pushboxA = {
-
-
-    x: entityA.x + 12,
-    y: entityA.y + 8,
-
-
-    width:
-      entityA.width - 24,
-
-
-    height:
-      entityA.height - 12
+    x:      entityA.x + 12,
+    y:      entityA.y + 8,
+    width:  entityA.width  - 24,
+    height: entityA.height - 12
   };
-
 
   const pushboxB = {
-
-
-    x: entityB.x + 12,
-    y: entityB.y + 8,
-
-
-    width:
-      entityB.width - 24,
-
-
-    height:
-      entityB.height - 12
+    x:      entityB.x + 12,
+    y:      entityB.y + 8,
+    width:  entityB.width  - 24,
+    height: entityB.height - 12
   };
 
+  if (!checkCollision(pushboxA, pushboxB)) return;
 
-  if (
-    !checkCollision(
-      pushboxA,
-      pushboxB
-    )
-  ) {
+  const centerA = pushboxA.x + pushboxA.width  / 2;
+  const centerB = pushboxB.x + pushboxB.width  / 2;
+  const overlap = (pushboxA.width / 2 + pushboxB.width / 2) - Math.abs(centerA - centerB);
 
+  if (overlap <= 0) return;
 
-    return;
-  }
+  let weightA = entityA.bodyPushResistance || 1;
+  let weightB = entityB.bodyPushResistance || 1;
 
+  // Personagens pesados
+  if (entityA.key === "pedro") weightA *= 4;
+  if (entityB.key === "pedro") weightB *= 4;
 
-  const centerA =
-    pushboxA.x +
-    pushboxA.width / 2;
+  // Tank mass
+  if (entityA.superArmor) weightA *= 1.5;
+  if (entityB.superArmor) weightB *= 1.5;
 
+  // Dash priority
+  if (entityA.isDashing) weightA *= 1.25;
+  if (entityB.isDashing) weightB *= 1.25;
 
-  const centerB =
-    pushboxB.x +
-    pushboxB.width / 2;
-
-
-  const overlap = (
-
-
-    pushboxA.width / 2 +
-    pushboxB.width / 2
-
-
-  ) - Math.abs(centerA - centerB);
-
-
-  if (overlap <= 0) {
-
-
-    return;
-  }
-
-
-  let weightA =
-    entityA.bodyPushResistance || 1;
-
-
-  let weightB =
-    entityB.bodyPushResistance || 1;
-
-
-  if (entityA.key === "pedro") {
-
-
-    weightA *= 4;
-  }
-
-
-  if (entityB.key === "pedro") {
-
-
-    weightB *= 4;
-  }
-
-
-  // ===============================================
-  // TANK MASS
-  // ===============================================
-  if (entityA.superArmor) {
-
-
-    weightA *= 1.5;
-  }
-
-
-  if (entityB.superArmor) {
-
-
-    weightB *= 1.5;
-  }
-
-
-  // ===============================================
-  // DASH PRIORITY
-  // ===============================================
-  if (entityA.isDashing) {
-
-
-    weightA *= 1.25;
-  }
-
-
-  if (entityB.isDashing) {
-
-
-    weightB *= 1.25;
-  }
-
-
-  const totalWeight =
-    weightA + weightB;
-
-
-  const pushForce =
-    overlap * 0.18;
-
-
-  const moveA =
-    pushForce *
-    (weightB / totalWeight);
-
-
-  const moveB =
-    pushForce *
-    (weightA / totalWeight);
-
+  const totalWeight = weightA + weightB;
+  const pushForce   = overlap * 0.18;
+  const moveA       = pushForce * (weightB / totalWeight);
+  const moveB       = pushForce * (weightA / totalWeight);
 
   if (centerA < centerB) {
-
-
     entityA.x -= moveA;
-
-
     entityB.x += moveB;
-  }
-
-
-  else {
-
-
+  } else {
     entityA.x += moveA;
-
-
     entityB.x -= moveB;
   }
 
+  // Dash momentum preservation
+  if (entityA.isDashing) entityA.velocityX *= 0.992;
+  if (entityB.isDashing) entityB.velocityX *= 0.992;
 
-  // ===============================================
-  // DASH MOMENTUM
-  // ===============================================
-  if (
-    entityA.isDashing
-  ) {
-
-
-    entityA.velocityX *= 0.992;
-  }
-
-
-  if (
-    entityB.isDashing
-  ) {
-
-
-    entityB.velocityX *= 0.992;
-  }
-
-
-  // ===============================================
-  // ANTI SHAKE
-  // ===============================================
-  if (
-    Math.abs(entityA.velocityX) < 0.04
-  ) {
-
-
-    entityA.velocityX = 0;
-  }
-
-
-  if (
-    Math.abs(entityB.velocityX) < 0.04
-  ) {
-
-
-    entityB.velocityX = 0;
-  }
+  // Anti-shake
+  if (Math.abs(entityA.velocityX) < 0.04) entityA.velocityX = 0;
+  if (Math.abs(entityB.velocityX) < 0.04) entityB.velocityX = 0;
 }
 
 
 // ===================================================
 // ITEM COLLISION
 // ===================================================
-function checkItemCollision(
-  player,
-  items
-) {
-
-
+function checkItemCollision(player, items) {
   const collected = [];
 
-
-  for (
-    let i = items.length - 1;
-    i >= 0;
-    i--
-  ) {
-
-
-    if (
-      checkCollision(
-        player,
-        items[i]
-      )
-    ) {
-
-
-      collected.push(
-        items[i]
-      );
-
-
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (checkCollision(player, items[i])) {
+      collected.push(items[i]);
       items.splice(i, 1);
     }
   }
-
 
   return collected;
 }
@@ -1290,107 +532,71 @@ function checkItemCollision(
 // ===================================================
 // OBSTACLE COLLISION
 // ===================================================
-function checkObstacleCollision(
-  entity,
-  obstacles
-) {
-
-
+function checkObstacleCollision(entity, obstacles) {
   for (const obstacle of obstacles) {
-
-
-    if (
-      checkCollision(
-        entity,
-        obstacle
-      )
-    ) {
-
-
-      return obstacle;
-    }
+    if (checkCollision(entity, obstacle)) return obstacle;
   }
-
-
   return null;
 }
 
 
 // ===================================================
-// DEBUG
+// DEBUG — DRAW HITBOX SIMPLES
 // ===================================================
-function drawHitbox(
-ctx,
-hitbox,
-color='red'
-){
+function drawHitbox(ctx, hitbox, color = 'red') {
+  if (!hitbox) return;
 
-
-if(!hitbox){
-return;
+  ctx.save();
+  ctx.strokeStyle  = color;
+  ctx.lineWidth    = 2;
+  ctx.globalAlpha  = 0.9;
+  ctx.strokeRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+  ctx.fillStyle    = color;
+  ctx.globalAlpha  = 0.12;
+  ctx.fillRect(hitbox.x, hitbox.y, hitbox.width, hitbox.height);
+  ctx.restore();
 }
 
 
-ctx.save();
+// ===================================================
+// DEBUG — DRAW ALL BOXES
+// Mostra hitbox, hurtbox e pushbox de uma entidade.
+// Ative com uma tecla (ex: F1 / tecla D) no game loop.
+//
+// USO:
+//   if (debugMode) drawAllBoxes(ctx, player);
+//   if (debugMode) enemies.forEach(e => drawAllBoxes(ctx, e));
+// ===================================================
+function drawAllBoxes(ctx, entity) {
+  // Hurtbox — verde (onde o personagem leva hit)
+  const hurtbox = getHurtboxForEntity(entity);
+  drawHitbox(ctx, hurtbox, 'lime');
 
+  // Hitbox de ataque — vermelho (onde o ataque causa dano)
+  const attackHitbox = getAttackHitbox(entity);
+  if (attackHitbox) {
+    drawHitbox(ctx, attackHitbox, 'red');
+  }
 
-ctx.strokeStyle =
-color;
+  // Pushbox — ciano (colisão de corpo a corpo)
+  const pushbox = {
+    x:      entity.x + 12,
+    y:      entity.y + 8,
+    width:  entity.width  - 24,
+    height: entity.height - 12
+  };
+  drawHitbox(ctx, pushbox, 'cyan');
 
-
-ctx.lineWidth = 2;
-
-
-ctx.globalAlpha =
-0.9;
-
-
-ctx.strokeRect(
-
-
-hitbox.x,
-
-
-hitbox.y,
-
-
-hitbox.width,
-
-
-hitbox.height
-
-
-);
-
-
-ctx.fillStyle =
-color;
-
-
-ctx.globalAlpha =
-0.12;
-
-
-ctx.fillRect(
-
-
-hitbox.x,
-
-
-hitbox.y,
-
-
-hitbox.width,
-
-
-hitbox.height
-
-
-);
-
-
-ctx.restore();
-
-
+  // Label com nome/id (opcional)
+  if (entity.id || entity.key) {
+    ctx.save();
+    ctx.fillStyle   = 'white';
+    ctx.font        = '10px monospace';
+    ctx.fillText(
+      entity.key || entity.id,
+      entity.x,
+      entity.y - 4
+    );
+    ctx.restore();
+  }
 }
-

@@ -74,9 +74,6 @@ playerMasculino: {
     hurt: [
 
         {x:0,y:1120,w:167,h:160},
-        {x:167,y:1120,w:167,h:160},
-        {x:334,y:1120,w:167,h:160},
-        {x:501,y:1120,w:167,h:160}
 
     ],
 
@@ -110,7 +107,7 @@ playerMasculino: {
 
   idle: [
 
-        {x:0,y:0,w:167,h:160}
+    {x:0,y:160,w:167,h:160},
 
     ],
 
@@ -359,9 +356,9 @@ professorGeovanne: {
         {x:0,y:160,w:167,h:160},
         {x:167,y:160,w:167,h:160},
         {x:334,y:160,w:167,h:160},
-        {x:501,y:160,w:167,h:160},
         {x:668,y:160,w:167,h:160},
-        {x:835,y:160,w:167,h:160}
+        {x:835,y:160,w:167,h:160},
+        {x:501,y:160,w:167,h:160}
 
     ],
 
@@ -435,12 +432,9 @@ professorGeovanne: {
     walk: [
 
         {x:0,y:160,w:167,h:160},
-        {x:167,y:160,w:167,h:160},
         {x:334,y:160,w:167,h:160},
-        {x:501,y:160,w:167,h:160},
-        {x:668,y:160,w:167,h:160},
-        {x:835,y:160,w:167,h:160},
-        {x:1002,y:160,w:167,h:160}
+        {x:1002,y:160,w:167,h:160},
+        {x:501,y:160,w:167,h:160}
 
     ],
 
@@ -560,4 +554,8 @@ AnimationData.professorWeverson.dash =
 AnimationData.professorWeverson.walk;
 
 AnimationData.professorWeverson.block =
+AnimationData.professorWeverson.idle;
+
+// Boss Weverson não usa dash
+AnimationData.professorWeverson.dash =
 AnimationData.professorWeverson.idle;
