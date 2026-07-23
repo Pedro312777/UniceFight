@@ -8,9 +8,7 @@ O projeto foi desenvolvido utilizando **JavaScript** e **HTML5 Canvas**, sem o u
 
 ## 📖 Sobre o projeto
 
-A proposta do UniceFight é transformar experiências vividas durante a graduação em uma aventura divertida e desafiadora. Cada batalha foi projetada para representar uma disciplina do curso, utilizando mecânicas que remetem a disciplina e a personalidade do professor correspondente.
-
-Ao longo da jornada, o jogador precisa dominar diferentes padrões de ataque, aprender as fraquezas de cada chefe e adaptar sua estratégia para superar desafios cada vez mais complexos.
+A proposta do UniceFight é transformar experiências vividas durante a graduação em uma aventura divertida e desafiadora. Ao longo da jornada, o jogador precisa dominar diferentes padrões de ataque, aprender as fraquezas de cada chefe e adaptar sua estratégia para superar desafios cada vez mais complexos.
 
 ---
 
@@ -32,7 +30,7 @@ Ao longo da jornada, o jogador precisa dominar diferentes padrões de ataque, ap
 
 ## 👨‍🏫 Chefes
 
-Cada professor possui uma personalidade própria e mecânicas exclusivas.
+Cada professor possui um estilo de luta próprio e mecânicas exclusivas.
 
 * 📚 Pedro — Algoritmos e Programação - Resistênte e disciplinado
 * 📊 Romes — Metodologia Ágil Scrum - Adaptativo e constante
