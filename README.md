@@ -90,9 +90,9 @@ git clone https://github.com/Pedro312777/UniceFight.git
 
 ## 👨‍💻 Autor
 
-**José Pedro Silva Morais**
+O projeto foi desenvolvido em equipe como projeto acadêmico do curso de Análise e Desenvolvimento de Sistemas.
 
-🎓 Graduado em Análise e Desenvolvimento de Sistemas.
+Meu papel: Atuei como programador, sendo responsável pelo desenvolvimento da lógica do jogo. Também atuei como líder do meu grupo, sendo responsável pela organização geral do projeto.
 
 ---
 
